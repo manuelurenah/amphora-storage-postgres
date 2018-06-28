@@ -1,6 +1,16 @@
 'use strict';
 
-const queries = require('./queries');
+const queries = require('./queries'),
+  TEST_DATA = JSON.stringify({
+    string: "JSONB mustn't have apostrophes"
+  }),
+  TEST_STRING = 'foo.com/someval',
+  EXPECTED_DATA = JSON.stringify({
+    string: "JSONB mustn''t have apostrophes"
+  }),
+  EXPECTED_TEST_STRING = JSON.stringify({
+    _value:TEST_STRING
+  });
 
 describe('postgres/queries', () => {
   describe.each([
@@ -71,17 +81,6 @@ describe('postgres/queries', () => {
     });
   });
 
-  const TEST_DATA = JSON.stringify({
-    string: "JSONB mustn't have apostrophes"
-  });
-  const TEST_STRING = 'foo.com/someval';
-  const EXPECTED_DATA = JSON.stringify({
-    string: "JSONB mustn''t have apostrophes"
-  });
-  const EXPECTED_TEST_STRING = JSON.stringify({
-    _value:TEST_STRING
-  });
-
   describe.each([
     ['foo.com/_pages/id', TEST_DATA, EXPECTED_DATA, 'pages', 'pages'],
     ['foo.com/_components/name/instances/foo', TEST_DATA, EXPECTED_DATA, 'component (instance)', 'components."name"'],
@@ -91,7 +90,7 @@ describe('postgres/queries', () => {
     ['foo.com/_uris/id', TEST_STRING, EXPECTED_TEST_STRING, 'uris', 'uris'],
   ])
   ('BATCH', (key, value, expectedData, type, table) => {
-    test(`returns a SQL command for creating entries in a batch`, () => {
+    test('returns a SQL command for creating entries in a batch', () => {
       expect(queries.BATCH(key, value)).toEqual(`INSERT INTO ${table}(id, data) VALUES ('${key}', '${expectedData}') ON CONFLICT (id) DO UPDATE SET data = '${expectedData}'::jsonb`);
     });
   });
@@ -114,5 +113,5 @@ describe('postgres/queries', () => {
     test('throws an error if key and values is not defined', () => {
       expect(() => queries.READ_STREAM({})).toThrow();
     });
-  })
+  });
 });

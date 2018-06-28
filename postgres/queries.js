@@ -6,6 +6,7 @@ const { findTable, wrapJSONStringInObject } = require('../services/utils');
  * Return a query to create a table if it does not exist
  *
  * @param {String} name
+ * @returns {String}
  */
 module.exports.CREATE_TABLE = name => `CREATE TABLE IF NOT EXISTS ${name} ( id TEXT PRIMARY KEY NOT NULL, data JSONB );`;
 
@@ -13,6 +14,7 @@ module.exports.CREATE_TABLE = name => `CREATE TABLE IF NOT EXISTS ${name} ( id T
  * Return a query to create a schema
  *
  * @param {String} name
+ * @returns {String}
  */
 module.exports.CREATE_SCHEMA = name => `CREATE SCHEMA IF NOT EXISTS ${name}`;
 
@@ -21,6 +23,7 @@ module.exports.CREATE_SCHEMA = name => `CREATE SCHEMA IF NOT EXISTS ${name}`;
  * the id value
  *
  * @param {String} id
+ * @returns {String}
  */
 module.exports.GET = (id) => `SELECT id, data FROM ${findTable(id)} WHERE id = '${id}'`;
 
@@ -28,6 +31,7 @@ module.exports.GET = (id) => `SELECT id, data FROM ${findTable(id)} WHERE id = '
  * Return a DELETE query that is matching on id only
  *
  * @param {String} id
+ * @returns {String}
  */
 module.exports.DEL = (id) => `DELETE FROM ${findTable(id)} WHERE id = '${id}'`;
 
@@ -38,6 +42,7 @@ module.exports.DEL = (id) => `DELETE FROM ${findTable(id)} WHERE id = '${id}'`;
  * consistent formatting
  *
  * @param {String} id
+ * @returns {String}
  */
 module.exports.PUT = (id) => `INSERT INTO ${findTable(id)}(id, data) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET data = $2::jsonb`;
 
@@ -49,6 +54,7 @@ module.exports.PUT = (id) => `INSERT INTO ${findTable(id)}(id, data) VALUES ($1,
  *
  * @param {String} id
  * @param {String} value A string of JSON (!important)
+ * @returns {String}
  */
 module.exports.BATCH = (id, value) => {
   var escapedString = wrapJSONStringInObject(id, value.replace(/'/g, "''")); // Escape single quotes
@@ -63,6 +69,7 @@ module.exports.BATCH = (id, value) => {
  * @param {String} options.prefix
  * @param {Boolean} options.values
  * @param {Boolean} options.keys
+ * @returns {String}
  */
 module.exports.READ_STREAM = ({ prefix, values, keys }) => {
   var selects = [];

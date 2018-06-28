@@ -14,7 +14,7 @@ describe('services/utils', () => {
     test('it does not error when trying to parse a non-JSON value', () => {
       expect(parseOrNot('foobar')).toStrictEqual('foobar');
     });
-  })
+  });
 
   describe.each([
     ['site.com/_components/cmpt/instances/foo', 'components."cmpt"'],

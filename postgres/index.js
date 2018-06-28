@@ -16,7 +16,7 @@ const client = require('./client'),
 function createNonComponentTables() {
   var promises = [];
 
-  for (var i = 0; i < DATA_STRUCTURES.length; i++) {
+  for (let i = 0; i < DATA_STRUCTURES.length; i++) {
     let STRUCTURE = DATA_STRUCTURES[i];
 
     if (STRUCTURE !== 'components') {
@@ -46,7 +46,7 @@ function setup() {
   return client.connect()
     .then(() => client.query(CREATE_SCHEMA('components')))
     .then(createTables)
-    .then(() => ({ server: `${POSTGRES_HOST}${POSTGRES_PORT}:${POSTGRES_PORT}` }))
+    .then(() => ({ server: `${POSTGRES_HOST}${POSTGRES_PORT}:${POSTGRES_PORT}` }));
 }
 
 module.exports.setup = setup;

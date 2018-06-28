@@ -30,7 +30,7 @@ function parseOrNot(value) {
 function findTable(key) {
   var table;
 
-  for (var i = 0; i < DATA_STRUCTURES.length; i++) {
+  for (let i = 0; i < DATA_STRUCTURES.length; i++) {
     let DATA_TYPE = DATA_STRUCTURES[i];
 
     if (key.indexOf(`/_${DATA_TYPE}`) > -1) {

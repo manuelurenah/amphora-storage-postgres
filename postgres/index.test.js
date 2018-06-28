@@ -2,7 +2,6 @@
 
 const { setup } = require('./index'),
   client = require('./client'),
-  queries = require('./queries'),
   { getComponents } = require('amphora-fs');
 
 jest.mock('./client');

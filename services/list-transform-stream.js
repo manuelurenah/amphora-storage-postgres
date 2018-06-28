@@ -34,6 +34,6 @@ ListTransformStream.prototype.write = function ({ id, data }) {
 
   // Push either the object or just the id
   this.push(data && JSON.stringify(data) || id);
-}
+};
 
 module.exports = ListTransformStream;

@@ -1,7 +1,6 @@
 'use strict';
 
 const client = require('./client'),
-  pg = require('pg'),
   TransformStream = require('../services/list-transform-stream'),
   QueryStream = require('pg-query-stream'),
   { Readable } = require('stream'),
@@ -100,7 +99,7 @@ describe('postgres/client', () => {
       CLIENT.query.mockResolvedValue('');
 
       return client.del('foo.com/_components/bar')
-        .then(resp => {
+        .then(() => {
           expect(CLIENT.query.mock.calls.length).toBe(1);
         });
     });
@@ -116,11 +115,9 @@ describe('postgres/client', () => {
         value: '{"bar": true}'
       }];
 
-
       CLIENT.query.mockResolvedValue('');
-
       return client.batch(ops)
-        .then(resp => {
+        .then(() => {
           expect(CLIENT.query.mock.calls.length).toBe(1);
         });
     });

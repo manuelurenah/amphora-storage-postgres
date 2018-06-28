@@ -4,10 +4,9 @@ const bluebird = require('bluebird'),
   { Client } = require('pg'),
   QueryStream = require('pg-query-stream'),
   { POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB } = require('../services/constants'),
-  { CREATE_TABLE, CREATE_SCHEMA, PUT, GET, DEL, BATCH, READ_STREAM } = require('./queries'),
+  { PUT, GET, DEL, BATCH, READ_STREAM } = require('./queries'),
   { notFoundError } = require('../services/errors'),
   { parseOrNot, wrapInObject } = require('../services/utils'),
-  { getComponents } = require('amphora-fs'),
   TransformStream = require('../services/list-transform-stream');
 var client = new Client({
   user: POSTGRES_USER,

@@ -1,6 +1,6 @@
 'use strict';
 
-const { put, get, del, batch, createReadStream, stubRedis, stubPostgres } = require('./db'),
+const { put, get, del, batch, createReadStream } = require('./db'),
   redis = require('../redis'),
   postgres = require('../postgres/client');
 
@@ -16,7 +16,7 @@ describe('services/db', () => {
     test('it does not call Postgres client if Redis has the data', () => {
       redis.get.mockResolvedValue(JSON.stringify(VALUE));
 
-      return get(KEY).then(resp => {
+      return get(KEY).then(() => {
         expect(redis.get.mock.calls.length).toBe(1);
         expect(redis.get).toHaveBeenCalledWith(KEY);
         expect(postgres.get.mock.calls.length).toBe(0);
@@ -26,7 +26,7 @@ describe('services/db', () => {
     test('it does call Postgres client if Redis has the data', () => {
       redis.get.mockResolvedValue(Promise.reject());
 
-      return get(KEY).then(resp => {
+      return get(KEY).then(() => {
         expect(redis.get.mock.calls.length).toBe(1);
         expect(postgres.get.mock.calls.length).toBe(1);
         expect(redis.get).toHaveBeenCalledWith(KEY);
@@ -40,7 +40,7 @@ describe('services/db', () => {
       redis.put.mockResolvedValue(Promise.resolve());
       postgres.put.mockResolvedValue(Promise.resolve());
 
-      return put(KEY, VALUE).then(resp => {
+      return put(KEY, VALUE).then(() => {
         expect(redis.put.mock.calls.length).toBe(1);
         expect(postgres.put.mock.calls.length).toBe(1);
         expect(redis.put).toHaveBeenCalledWith(KEY, VALUE);
@@ -54,7 +54,7 @@ describe('services/db', () => {
       redis.del.mockResolvedValue(Promise.resolve());
       postgres.del.mockResolvedValue(Promise.resolve());
 
-      return del(KEY).then(resp => {
+      return del(KEY).then(() => {
         expect(redis.del.mock.calls.length).toBe(1);
         expect(postgres.del.mock.calls.length).toBe(1);
         expect(redis.del).toHaveBeenCalledWith(KEY);
@@ -68,7 +68,7 @@ describe('services/db', () => {
       redis.batch.mockResolvedValue(Promise.resolve());
       postgres.batch.mockResolvedValue(Promise.resolve());
 
-      return batch(OPS).then(resp => {
+      return batch(OPS).then(() => {
         expect(redis.batch.mock.calls.length).toBe(1);
         expect(postgres.batch.mock.calls.length).toBe(1);
         expect(redis.batch).toHaveBeenCalledWith(OPS);
