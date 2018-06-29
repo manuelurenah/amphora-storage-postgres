@@ -2,6 +2,9 @@
 
 > A storage module for Amphora using Postgres & Redis
 
+[![CircleCI](https://circleci.com/gh/clay/amphora-storage-postgres/tree/master.svg?style=svg)](https://circleci.com/gh/clay/amphora-storage-postgres/tree/master)
+[![Coverage Status](https://coveralls.io/repos/github/clay/amphora-storage-postgres/badge.svg?branch=master)](https://coveralls.io/github/clay/amphora-storage-postgres?branch=master)
+
 ## Installation & Usage
 
 First install the module:

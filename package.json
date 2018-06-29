@@ -30,6 +30,7 @@
     "redis": "^2.8.0"
   },
   "devDependencies": {
+    "coveralls": "^3.0.1",
     "eslint": "^5.0.1",
     "gitbook-cli": "^2.3.2",
     "gitbook-plugin-accordion": "^1.1.3",
