@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "eslint": "eslint --max-warnings 0 postgres redis services",
-    "test": "jest"
+    "jest": "jest",
+    "test": "npm run eslint && npm run jest"
   },
   "author": "",
   "license": "MIT",
