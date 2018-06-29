@@ -4,10 +4,11 @@ var redis = require('../redis'),
   postgres = require('../postgres/client');
 
 /**
- * [put description]
- * @param  {[type]} key   [description]
- * @param  {[type]} value [description]
- * @return {[type]}       [description]
+ * Write a single value to cache and db
+ *
+ * @param  {String} key
+ * @param  {Object} value
+ * @return {Promise}
  */
 function put(key, value) {
   return redis.put(key, value)
@@ -15,9 +16,11 @@ function put(key, value) {
 }
 
 /**
- * [get description]
- * @param  {[type]} key [description]
- * @return {[type]}     [description]
+ * Return a value from the db or cache. Must
+ * return a Object, not stringified JSON
+ *
+ * @param  {String} key
+ * @return {Promise}
  */
 function get(key) {
   return redis.get(key)
@@ -26,9 +29,10 @@ function get(key) {
 }
 
 /**
- * [batch description]
- * @param  {[type]} ops [description]
- * @return {[type]}     [description]
+ * Process a whole group of saves
+ *
+ * @param  {Array} ops
+ * @return {Promise}
  */
 function batch(ops) {
   return redis.batch(ops)
@@ -36,27 +40,18 @@ function batch(ops) {
 }
 
 /**
- * [del description]
- * @param  {[type]} key [description]
- * @return {[type]}     [description]
+ * Remove a value from cache and db
+ *
+ * @param  {String} key
+ * @return {Promise}
  */
 function del(key) {
-  // TODO: keys will not always exist in redis, failover gracefully
   return redis.del(key)
     .then(() => postgres.del(key));
-}
-
-/**
- * [createReadStream description]
- * @param  {[type]} options [description]
- * @return {[type]}         [description]
- */
-function createReadStream(options) {
-  return postgres.createReadStream(options);
 }
 
 module.exports.put = put;
 module.exports.get = get;
 module.exports.del = del;
 module.exports.batch = batch;
-module.exports.createReadStream = createReadStream;
+module.exports.createReadStream = postgres.createReadStream;
