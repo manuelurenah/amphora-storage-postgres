@@ -54,4 +54,7 @@ module.exports.put = put;
 module.exports.get = get;
 module.exports.del = del;
 module.exports.batch = batch;
+module.exports.putMeta = postgres.putMeta;
+module.exports.getMeta = postgres.getMeta;
 module.exports.createReadStream = postgres.createReadStream;
+module.exports.query = postgres.query;

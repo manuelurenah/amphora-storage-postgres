@@ -23,10 +23,9 @@
     "amphora-fs": "^0.2.0",
     "bluebird": "^3.5.1",
     "clay-log": "^1.3.0",
-    "clayutils": "^2.3.0",
-    "gitbook-plugin-github": "^2.0.0",
+    "clayutils": "^2.6.0",
+    "knex": "^0.15.0",
     "pg": "^7.4.3",
-    "pg-query-stream": "^1.1.1",
     "redis": "^2.8.0"
   },
   "devDependencies": {

@@ -14,7 +14,7 @@ describe('postgres/index', () => {
 
     return setup().then(resp => {
       expect(client.connect.mock.calls.length).toBe(1);
-      expect(client.query.mock.calls.length).toBe(9);
+      expect(client.query.mock.calls.length).toBe(8);
       expect(resp).toHaveProperty('server');
     });
   });
