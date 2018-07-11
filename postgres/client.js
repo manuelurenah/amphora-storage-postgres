@@ -53,7 +53,7 @@ function connect() {
     }
   });
 
-  return knex.table('information_schema.tables').first('id')
+  return knex.table('information_schema.tables').first()
     .catch(createDBIfNotExists);
 }
 
