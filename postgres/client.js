@@ -76,7 +76,6 @@ function baseQuery(key) {
 function get(key) {
   return baseQuery(key)
     .select('data')
-    .from(table)
     .where('id', key)
     .then(resp => {
       if (!resp.length) return notFoundError(key);
