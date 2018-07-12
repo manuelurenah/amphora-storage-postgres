@@ -28,6 +28,7 @@ function createDBIfNotExists() {
     }
   });
 
+  // https://github.com/clay/amphora-storage-postgres/pull/7/files/16d3429767943a593ad9667b0d471fefc15088d3#diff-6a1e11a6146d3a5a01f955a44a2ac07a
   return tmpClient.raw(`CREATE DATABASE ${POSTGRES_DB}`)
     .then(() => tmpClient.destroy())
     .then(connect);
@@ -53,8 +54,17 @@ function connect() {
     }
   });
 
+  // TODO: improve error catch! https://github.com/clay/amphora-storage-postgres/pull/7/files/16d3429767943a593ad9667b0d471fefc15088d3#diff-6a1e11a6146d3a5a01f955a44a2ac07a
   return knex.table('information_schema.tables').first()
     .catch(createDBIfNotExists);
+}
+
+function baseQuery(key) {
+  const { schema, table } = findSchemaAndTable(key);
+
+  return schema
+    ? knex(table).withSchema(schema)
+    : knex(table);
 }
 
 /**
@@ -64,21 +74,7 @@ function connect() {
  * @return {Promise}
  */
 function get(key) {
-  const { schema, table } = findSchemaAndTable(key);
-
-  if (schema) {
-    return knex.withSchema(schema)
-      .select('data')
-      .from(table)
-      .where('id', key)
-      .then(resp => {
-        if (!resp.length) return notFoundError(key);
-
-        return resp[0].data;
-      });
-  }
-
-  return knex
+  return baseQuery(key)
     .select('data')
     .from(table)
     .where('id', key)
@@ -106,6 +102,8 @@ function put(key, value) {
  * Given a key (id), data, which column that
  * data lives at, a schema and a table a `NO
  * CONFLICT` insert is executed
+ *
+ * TODO: BETTER COMMENT https://github.com/clay/amphora-storage-postgres/pull/7/files/16d3429767943a593ad9667b0d471fefc15088d3#diff-6a1e11a6146d3a5a01f955a44a2ac07a
  *
  * @param {String} id
  * @param {Object|String} data
@@ -139,17 +137,7 @@ function onConflictPut(id, data, dataProp, schema, table) {
  * @return {Promise}
  */
 function del(key) {
-  const { table, schema } = findSchemaAndTable(key);
-
-  if (schema) { // If schema
-    return knex.withSchema(schema)
-      .table(table)
-      .where('id', key)
-      .del();
-  }
-
-  // If straight table
-  return knex(table)
+  return baseQuery(key)
     .where('id', key)
     .del();
 }
@@ -181,21 +169,16 @@ function batch(ops) {
  */
 function createReadStream(options) {
   const { prefix, values, keys } = options,
-    { schema, table } = findSchemaAndTable(prefix),
     transform = TransformStream(options),
     selects = [];
-  var stream;
 
   if (keys) selects.push('id');
   if (values) selects.push('data');
 
-  if (schema) {
-    stream = knex.select(...selects).withSchema(schema).from(table).where('id', 'like', `${prefix}%`).stream();
-  } else {
-    stream = knex.select(...selects).from(table).where('id', 'like', `${prefix}%`).stream();
-  }
-
-  stream.pipe(transform);
+  baseQuery(prefix)
+    .select(...selects)
+    .where('id', 'like', `${prefix}%`)
+    .pipe(transform);
 
   return transform;
 }
@@ -219,21 +202,10 @@ function putMeta(key, value) {
  * @return {[type]}       [description]
  */
 function getMeta(key) {
-  const { schema, table } = findSchemaAndTable(key);
-
-  if (schema) {
-    return knex.withSchema(schema)
-      .select('meta')
-      .from(table)
-      .where('id', key)
-      .get('rows')
-      .then(resp => resp[0].meta);
-  }
-
-  return knex
+  return baseQuery(key)
     .select('meta')
-    .from(table)
     .where('id', key)
+    .get('rows')
     .then(resp => resp[0].meta);
 }
 
@@ -246,7 +218,7 @@ function getMeta(key) {
  * @returns {Promise}
  */
 function createTable(table) {
-  return knex.raw(`CREATE TABLE IF NOT EXISTS ${table} ( id TEXT PRIMARY KEY NOT NULL, data JSONB );`);
+  return knex.raw('CREATE TABLE IF NOT EXISTS ?? ( id TEXT PRIMARY KEY NOT NULL, data JSONB, meta JSONB );', [table]);
 }
 
 /**
@@ -259,7 +231,8 @@ function createTable(table) {
  * @returns {Promise}
  */
 function createTableWithMeta(table) {
-  return knex.raw(`CREATE TABLE IF NOT EXISTS ${table} ( id TEXT PRIMARY KEY NOT NULL, data JSONB, meta JSONB );`);
+  return knex.raw('CREATE TABLE IF NOT EXISTS ?? ( id TEXT PRIMARY KEY NOT NULL, data JSONB, meta JSONB );', [table]);
+
 }
 
 /**
@@ -270,7 +243,7 @@ function createTableWithMeta(table) {
  * @returns {Promise}
  */
 function createSchema(name) {
-  return knex.raw(`CREATE SCHEMA IF NOT EXISTS ${name}`);
+  return knex.raw('CREATE SCHEMA IF NOT EXISTS ??;', [name]);
 }
 
 module.exports.connect = connect;
