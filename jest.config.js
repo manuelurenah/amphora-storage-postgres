@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = {
   verbose: true,
   clearMocks: true,
@@ -7,7 +9,8 @@ module.exports = {
     '!**/node_modules/**',
     '!*.config.js',
     '!index.js',
+    '!_book/**',
     '**/*.js'
   ],
   coverageDirectory: 'coverage'
-}
+};

@@ -13,4 +13,4 @@ module.exports.REDIS_HASH        = process.env.CLAY_STORAGE_REDIS_HASH        ||
 module.exports.REDIS_URL         = process.env.CLAY_STORAGE_REDIS_HOST        || 'redis://localhost:6379';
 
 // Application code
-module.exports.DATA_STRUCTURES   = ['components', 'pages', 'uris', 'lists', 'users', 'schedule'];
+module.exports.DATA_STRUCTURES   = ['components', 'layouts', 'pages', 'uris', 'lists', 'users'];

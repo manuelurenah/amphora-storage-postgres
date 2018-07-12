@@ -1,39 +1,70 @@
 'use strict';
 
-const bluebird = require('bluebird'),
-  { Client } = require('pg'),
-  QueryStream = require('pg-query-stream'),
-  { POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB } = require('../services/constants'),
-  { PUT, GET, DEL, BATCH, READ_STREAM } = require('./queries'),
+const { POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB } = require('../services/constants'),
   { notFoundError } = require('../services/errors'),
-  { parseOrNot, wrapInObject } = require('../services/utils'),
+  { parseOrNot } = require('../services/utils'),
+  { findSchemaAndTable, wrapJSONStringInObject } = require('../services/utils'),
+  knexLib = require('knex'),
   TransformStream = require('../services/list-transform-stream');
-var client = new Client({
-  user: POSTGRES_USER,
-  host: POSTGRES_HOST,
-  database: POSTGRES_DB,
-  password: POSTGRES_PASSWORD,
-  port: POSTGRES_PORT,
-});
+var knex;
 
 /**
- * Connect to the DB
+ * Connect to the default DB and create the Clay
+ * DB. Once the DB has been made the connection
+ * can be killed and we can try to re-connect
+ * to the Clay DB
  *
- * @return {Promise}
+ * @returns {Promise}
  */
-function connect() {
-  return client.connect();
+function createDBIfNotExists() {
+  const tmpClient = knexLib({
+    client: 'pg',
+    connection: {
+      host: POSTGRES_HOST,
+      user: POSTGRES_USER,
+      password: POSTGRES_PASSWORD,
+      database: 'postgres',
+      port: POSTGRES_PORT
+    }
+  });
+
+  // https://github.com/clay/amphora-storage-postgres/pull/7/files/16d3429767943a593ad9667b0d471fefc15088d3#diff-6a1e11a6146d3a5a01f955a44a2ac07a
+  return tmpClient.raw(`CREATE DATABASE ${POSTGRES_DB}`)
+    .then(() => tmpClient.destroy())
+    .then(connect);
 }
 
 /**
- * Execute a query using the client
- * scoped to the module
+ * Connect to the DB. We need to do a quick check
+ * to see if we're actually connected to the Clay
+ * DB. If we aren't, connect to default and then
+ * use that connection to create the Clay DB.
  *
- * @param  {String} query
- * @return {Promise}
+ * @returns {Promise}
  */
-function query(query) {
-  return client.query(query);
+function connect() {
+  knex = knexLib({
+    client: 'pg',
+    connection: {
+      host: POSTGRES_HOST,
+      user: POSTGRES_USER,
+      password: POSTGRES_PASSWORD,
+      database: POSTGRES_DB,
+      port: POSTGRES_PORT
+    }
+  });
+
+  // TODO: improve error catch! https://github.com/clay/amphora-storage-postgres/pull/7/files/16d3429767943a593ad9667b0d471fefc15088d3#diff-6a1e11a6146d3a5a01f955a44a2ac07a
+  return knex.table('information_schema.tables').first()
+    .catch(createDBIfNotExists);
+}
+
+function baseQuery(key) {
+  const { schema, table } = findSchemaAndTable(key);
+
+  return schema
+    ? knex(table).withSchema(schema)
+    : knex(table);
 }
 
 /**
@@ -43,12 +74,14 @@ function query(query) {
  * @return {Promise}
  */
 function get(key) {
-  return client.query(GET(key))
+  return baseQuery(key)
+    .select('data')
+    .from(table)
+    .where('id', key)
     .then(resp => {
-      let data = resp.rows[0] && resp.rows[0].data;
+      if (!resp.length) return notFoundError(key);
 
-      // We return the `._value` property if available because that's a list/uri
-      return data ? data._value || data : bluebird.reject(notFoundError(key));
+      return resp[0].data;
     });
 }
 
@@ -60,10 +93,40 @@ function get(key) {
  * @return {Promise}
  */
 function put(key, value) {
-  let obj = parseOrNot(value);
+  const { schema, table } = findSchemaAndTable(key);
 
-  return client.query(PUT(key), [key, wrapInObject(key, obj)])
-    .then(() => obj);
+  return onConflictPut(key, parseOrNot(value), 'data', schema, table);
+}
+
+/**
+ * Given a key (id), data, which column that
+ * data lives at, a schema and a table a `NO
+ * CONFLICT` insert is executed
+ *
+ * TODO: BETTER COMMENT https://github.com/clay/amphora-storage-postgres/pull/7/files/16d3429767943a593ad9667b0d471fefc15088d3#diff-6a1e11a6146d3a5a01f955a44a2ac07a
+ *
+ * @param {String} id
+ * @param {Object|String} data
+ * @param {String} dataProp
+ * @param {String} schema
+ * @param {String} table
+ * @returns {Promise}
+ */
+function onConflictPut(id, data, dataProp, schema, table) {
+  var insert, update, putObj = { id };
+
+  putObj[dataProp] = data;
+
+  if (schema) {
+    insert = knex.withSchema(schema).table(table).insert(putObj);
+  } else {
+    insert = knex.table(table).insert(putObj);
+  }
+
+  update = knex.queryBuilder().update(putObj);
+
+  return knex.raw('? ON CONFLICT (id) DO ? returning *', [insert, update])
+    .then(() => data);
 }
 
 /**
@@ -74,7 +137,9 @@ function put(key, value) {
  * @return {Promise}
  */
 function del(key) {
-  return client.query(DEL(key));
+  return baseQuery(key)
+    .where('id', key)
+    .del();
 }
 
 /**
@@ -86,12 +151,13 @@ function batch(ops) {
   var commands = [];
 
   for (let i = 0; i < ops.length; i++) {
-    let { key, value } = ops[i];
+    let { key, value } = ops[i],
+      { table, schema } = findSchemaAndTable(key);
 
-    commands.push(BATCH(key, value));
+    commands.push(onConflictPut(key, wrapJSONStringInObject(key, value), 'data', schema, table));
   }
 
-  return client.query(commands.join('; '));
+  return Promise.all(commands);
 }
 
 /**
@@ -102,21 +168,97 @@ function batch(ops) {
  * @return {Stream}
  */
 function createReadStream(options) {
-  const queryStream = new QueryStream(READ_STREAM(options)),
-    transform = TransformStream(options);
+  const { prefix, values, keys } = options,
+    transform = TransformStream(options),
+    selects = [];
 
-  client.query(queryStream).pipe(transform);
+  if (keys) selects.push('id');
+  if (values) selects.push('data');
+
+  baseQuery(prefix)
+    .select(...selects)
+    .where('id', 'like', `${prefix}%`)
+    .pipe(transform);
 
   return transform;
 }
 
+/**
+ * [putMeta description]
+ * @param  {[type]} key   [description]
+ * @param  {[type]} value [description]
+ * @return {[type]}       [description]
+ */
+function putMeta(key, value) {
+  const { schema, table } = findSchemaAndTable(key);
+
+  return onConflictPut(key, parseOrNot(value), 'meta', schema, table);
+}
+
+/**
+ * [putMeta description]
+ * @param  {[type]} key   [description]
+ * @param  {[type]} value [description]
+ * @return {[type]}       [description]
+ */
+function getMeta(key) {
+  return baseQuery(key)
+    .select('meta')
+    .where('id', key)
+    .get('rows')
+    .then(resp => resp[0].meta);
+}
+
+/**
+ * Creates a table with the name that's
+ * passed into the function. Table has
+ * an `id` (text) and `data` (jsonb) columns
+ *
+ * @param {String} table
+ * @returns {Promise}
+ */
+function createTable(table) {
+  return knex.raw('CREATE TABLE IF NOT EXISTS ?? ( id TEXT PRIMARY KEY NOT NULL, data JSONB, meta JSONB );', [table]);
+}
+
+/**
+ * Creates a table with the name that's
+ * passed into the function. Table has
+ * an `id` (text), `data` (jsonb) column,
+ * and `meta` (jsonb) columns
+ *
+ * @param {String} table
+ * @returns {Promise}
+ */
+function createTableWithMeta(table) {
+  return knex.raw('CREATE TABLE IF NOT EXISTS ?? ( id TEXT PRIMARY KEY NOT NULL, data JSONB, meta JSONB );', [table]);
+
+}
+
+/**
+ * Creates a Postgres schema with the
+ * name passed into the function
+ *
+ * @param {String} name
+ * @returns {Promise}
+ */
+function createSchema(name) {
+  return knex.raw('CREATE SCHEMA IF NOT EXISTS ??;', [name]);
+}
+
 module.exports.connect = connect;
-module.exports.query = query;
 module.exports.put = put;
 module.exports.get = get;
 module.exports.del = del;
 module.exports.batch = batch;
+module.exports.putMeta = putMeta;
+module.exports.getMeta = getMeta;
 module.exports.createReadStream = createReadStream;
+
+// Knex methods
+module.exports.createSchema = createSchema;
+module.exports.createTable = createTable;
+module.exports.createTableWithMeta = createTableWithMeta;
 
 // For testing
 module.exports.setClient = mock => client = mock;

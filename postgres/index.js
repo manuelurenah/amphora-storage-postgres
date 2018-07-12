@@ -2,9 +2,8 @@
 
 const client = require('./client'),
   bluebird = require('bluebird'),
-  { CREATE_TABLE, CREATE_SCHEMA } = require('./queries'),
   { DATA_STRUCTURES, POSTGRES_HOST, POSTGRES_PORT } = require('../services/constants'),
-  { getComponents } = require('amphora-fs');
+  { getComponents, getLayouts } = require('amphora-fs');
 
 /**
  * Create all the tables for the different Clay data structures.
@@ -19,8 +18,8 @@ function createNonComponentTables() {
   for (let i = 0; i < DATA_STRUCTURES.length; i++) {
     let STRUCTURE = DATA_STRUCTURES[i];
 
-    if (STRUCTURE !== 'components') {
-      promises.push(client.query(CREATE_TABLE(STRUCTURE)));
+    if (STRUCTURE !== 'components' && STRUCTURE !== 'pages' && STRUCTURE !== 'layouts') {
+      promises.push(client.createTable(STRUCTURE));
     }
   }
 
@@ -33,8 +32,11 @@ function createNonComponentTables() {
  * @return {Promise}
  */
 function createTables() {
-  return bluebird.all(getComponents().map(component => client.query(CREATE_TABLE(`components."${component}"`))))
+  return bluebird.all(getComponents().map(component => client.createTable(`components."${component}"`)))
+    .then(() => bluebird.all(getLayouts().map(layout => client.createTableWithMeta(`layouts."${layout}"`))))
+    .then(() => client.createTableWithMeta('pages'))
     .then(() => createNonComponentTables());
+
 }
 
 /**
@@ -44,7 +46,8 @@ function createTables() {
  */
 function setup() {
   return client.connect()
-    .then(() => client.query(CREATE_SCHEMA('components')))
+    .then(() => client.createSchema('components'))
+    .then(() => client.createSchema('layouts'))
     .then(createTables)
     .then(() => ({ server: `${POSTGRES_HOST}${POSTGRES_PORT}:${POSTGRES_PORT}` }));
 }

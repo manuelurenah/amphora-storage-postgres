@@ -33,7 +33,6 @@ describe('redis', () => {
     ['published pages', 'site.com/_pages/foo@published', FAKE_DATA, 1],
     ['lists', 'site.com/_lists/foo', FAKE_DATA, 0],
     ['uris', 'site.com/_uris/foo', FAKE_DATA, 1],
-    ['schedule', 'site.com/_schedule/foo', FAKE_DATA, 0],
     ['users', 'site.com/_users/foo', FAKE_DATA, 1]
   ])
   ('put', (val, key, data, resolution) => {
@@ -51,7 +50,6 @@ describe('redis', () => {
     ['published pages', 'site.com/_pages/foo@published', 1],
     ['lists', 'site.com/_lists/foo', 0],
     ['uris', 'site.com/_uris/foo', 1],
-    ['schedule', 'site.com/_schedule/foo', 0],
     ['users', 'site.com/_users/foo', 1]
   ])
   ('del', (val, key, resolution) => {

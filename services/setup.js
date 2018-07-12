@@ -18,7 +18,7 @@ function logConnectionSuccess(name, resp) {
  * @param  {Error} err
  */
 function logConnectionError(err) {
-  log('error', err);
+  log('error', err.message, { stack: err.stack });
 }
 
 /**

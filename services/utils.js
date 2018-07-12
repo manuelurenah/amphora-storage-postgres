@@ -1,7 +1,7 @@
 'use strict';
 
 const { DATA_STRUCTURES } = require('./constants'),
-  { getComponentName } = require('clayutils'),
+  { getComponentName, getLayoutName } = require('clayutils'),
   { isList, isUri } = require('clayutils');
 
 /**
@@ -19,23 +19,16 @@ function parseOrNot(value) {
   }
 }
 
-/**
- * Find which table the key belongs to. If it's a component
- * then we need to provide a <SCHEMA>.<TABLE> definition so
- * that the data gets to the proper place
- *
- * @param  {String} key [description]
- * @return {String}     [description]
- */
-function findTable(key) {
-  var table;
+function findSchemaAndTable(key) {
+  var table, schema;
 
   for (let i = 0; i < DATA_STRUCTURES.length; i++) {
     let DATA_TYPE = DATA_STRUCTURES[i];
 
     if (key.indexOf(`/_${DATA_TYPE}`) > -1) {
-      if (DATA_TYPE === 'components') {
-        table = `${DATA_TYPE}."${getComponentName(key)}"`;
+      if (DATA_TYPE === 'components' || DATA_TYPE === 'layouts') {
+        schema = DATA_TYPE;
+        table = getComponentName(key) || getLayoutName(key);
       } else {
         table = DATA_TYPE;
       }
@@ -45,7 +38,7 @@ function findTable(key) {
     }
   }
 
-  return table;
+  return { schema, table };
 }
 
 /**
@@ -77,7 +70,7 @@ function wrapJSONStringInObject(key, _value) {
   return `{"_value":"${_value}"}`;
 }
 
+module.exports.findSchemaAndTable = findSchemaAndTable;
 module.exports.parseOrNot = parseOrNot;
-module.exports.findTable = findTable;
 module.exports.wrapInObject = wrapInObject;
 module.exports.wrapJSONStringInObject = wrapJSONStringInObject;

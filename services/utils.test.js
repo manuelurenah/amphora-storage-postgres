@@ -1,6 +1,6 @@
 'use strict';
 
-const { parseOrNot, findTable, wrapInObject, wrapJSONStringInObject } = require('./utils');
+const { parseOrNot, wrapInObject, wrapJSONStringInObject } = require('./utils');
 
 describe('services/utils', () => {
   const testObj = { foo: true, bar: false },
@@ -16,26 +16,25 @@ describe('services/utils', () => {
     });
   });
 
-  describe.each([
-    ['site.com/_components/cmpt/instances/foo', 'components."cmpt"'],
-    ['site.com/_pages/foo', 'pages'],
-    ['site.com/_lists/foo', 'lists'],
-    ['site.com/_uris/foo', 'uris'],
-    ['site.com/_schedule/foo', 'schedule'],
-    ['site.com/_fake/foo', undefined]
-  ])
-  ('findTable', (key, collection) => {
-    test(`returns ${collection}`, () => {
-      expect(findTable(key)).toBe(collection);
-    });
-  });
+  // TODO: MODIFY FOR findSchemaAndTable when testing is a priority
+  // describe.each([
+  //   ['site.com/_components/cmpt/instances/foo', 'components."cmpt"'],
+  //   ['site.com/_pages/foo', 'pages'],
+  //   ['site.com/_lists/foo', 'lists'],
+  //   ['site.com/_uris/foo', 'uris'],
+  //   ['site.com/_fake/foo', undefined]
+  // ])
+  // ('findTable', (key, collection) => {
+  //   test(`returns ${collection}`, () => {
+  //     expect(findTable(key)).toBe(collection);
+  //   });
+  // });
 
   describe.each([
     ['components', 'site.com/_components/cmpt/instances/foo', testObj, testObj],
     ['pages', 'site.com/_pages/foo', testObj, testObj],
     ['lists', 'site.com/_lists/foo', testObj, { _value: testObj }],
-    ['uris', 'site.com/_uris/foo', testObj, { _value: testObj }],
-    ['schedule', 'site.com/_schedule/foo', testObj, testObj]
+    ['uris', 'site.com/_uris/foo', testObj, { _value: testObj }]
   ])
   ('wrapInObject', (type, key, value, result) => {
     test(`wraps ${type} correctly`, () => {
@@ -47,8 +46,7 @@ describe('services/utils', () => {
     ['components', 'site.com/_components/cmpt/instances/foo', stringifiedTestObj, stringifiedTestObj],
     ['pages', 'site.com/_pages/foo', stringifiedTestObj, stringifiedTestObj],
     ['lists', 'site.com/_lists/foo', stringifiedTestObj, `{"_value":"${stringifiedTestObj}"}`],
-    ['uris', 'site.com/_uris/foo', stringifiedTestObj, `{"_value":"${stringifiedTestObj}"}`],
-    ['schedule', 'site.com/_schedule/foo', stringifiedTestObj, stringifiedTestObj]
+    ['uris', 'site.com/_uris/foo', stringifiedTestObj, `{"_value":"${stringifiedTestObj}"}`]
   ])
   ('wrapJSONStringInObject', (type, key, value, result) => {
     test(`wraps ${type} correctly`, () => {
