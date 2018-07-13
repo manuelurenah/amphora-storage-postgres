@@ -8,6 +8,7 @@ module.exports.get = db.get;
 module.exports.del = db.del;
 module.exports.batch = db.batch;
 module.exports.putMeta = db.putMeta;
+module.exports.patchMeta = db.patchMeta;
 module.exports.getMeta = db.getMeta;
 module.exports.createReadStream = db.createReadStream;
 module.exports.query = db.query;

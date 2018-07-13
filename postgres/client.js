@@ -2,10 +2,11 @@
 
 const { POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB } = require('../services/constants'),
   { notFoundError } = require('../services/errors'),
-  { parseOrNot } = require('../services/utils'),
+  { parseOrNot, wrapInObject } = require('../services/utils'),
   { findSchemaAndTable, wrapJSONStringInObject } = require('../services/utils'),
   knexLib = require('knex'),
-  TransformStream = require('../services/list-transform-stream');
+  TransformStream = require('../services/list-transform-stream'),
+  META_PUT_PATCH_FN = patch('meta');
 var knex;
 
 /**
@@ -59,6 +60,14 @@ function connect() {
     .catch(createDBIfNotExists);
 }
 
+function pullValFromRows(key, prop) {
+  return (resp) => {
+    if (!resp.length) return notFoundError(key);
+
+    return resp[0][prop];
+  };
+}
+
 function baseQuery(key) {
   const { schema, table } = findSchemaAndTable(key);
 
@@ -77,11 +86,7 @@ function get(key) {
   return baseQuery(key)
     .select('data')
     .where('id', key)
-    .then(resp => {
-      if (!resp.length) return notFoundError(key);
-
-      return resp[0].data;
-    });
+    .then(pullValFromRows(key, 'data'));
 }
 
 /**
@@ -94,7 +99,20 @@ function get(key) {
 function put(key, value) {
   const { schema, table } = findSchemaAndTable(key);
 
-  return onConflictPut(key, parseOrNot(value), 'data', schema, table);
+  return onConflictPut(key, wrapInObject(key,parseOrNot(value)), 'data', schema, table);
+}
+
+/**
+ *
+ * @param {*} key
+ * @param {*} value
+ */
+function patch(prop) {
+  return (key, value) => {
+    const { schema, table } = findSchemaAndTable(key);
+
+    return knex.raw('UPDATE ?? SET ?? = ?? || ? WHERE id = ?', [`${schema ? `${schema}.` : ''}${table}`, prop, prop, JSON.stringify(value), key]);
+  };
 }
 
 /**
@@ -188,24 +206,11 @@ function createReadStream(options) {
  * @param  {[type]} value [description]
  * @return {[type]}       [description]
  */
-function putMeta(key, value) {
-  const { schema, table } = findSchemaAndTable(key);
-
-  return onConflictPut(key, parseOrNot(value), 'meta', schema, table);
-}
-
-/**
- * [putMeta description]
- * @param  {[type]} key   [description]
- * @param  {[type]} value [description]
- * @return {[type]}       [description]
- */
 function getMeta(key) {
   return baseQuery(key)
     .select('meta')
     .where('id', key)
-    .get('rows')
-    .then(resp => resp[0].meta);
+    .then(pullValFromRows(key, 'meta'));
 }
 
 /**
@@ -245,13 +250,17 @@ function createSchema(name) {
   return knex.raw('CREATE SCHEMA IF NOT EXISTS ??;', [name]);
 }
 
+
+
 module.exports.connect = connect;
 module.exports.put = put;
 module.exports.get = get;
 module.exports.del = del;
+module.exports.patch = patch('data');
 module.exports.batch = batch;
-module.exports.putMeta = putMeta;
 module.exports.getMeta = getMeta;
+module.exports.putMeta = META_PUT_PATCH_FN;
+module.exports.patchMeta = META_PUT_PATCH_FN;
 module.exports.createReadStream = createReadStream;
 
 // Knex methods
