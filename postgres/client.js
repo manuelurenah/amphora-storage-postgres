@@ -62,7 +62,7 @@ function connect() {
 
 function pullValFromRows(key, prop) {
   return (resp) => {
-    if (!resp.length) return notFoundError(key);
+    if (!resp.length) return Promise.reject(notFoundError(key));
 
     return resp[0][prop];
   };
@@ -214,6 +214,18 @@ function getMeta(key) {
 }
 
 /**
+ * [putMeta description]
+ * @param  {[type]} key   [description]
+ * @param  {[type]} value [description]
+ * @return {[type]}       [description]
+ */
+function putMeta(key, value) {
+  const { schema, table } = findSchemaAndTable(key);
+
+  return onConflictPut(key, parseOrNot(value), 'meta', schema, table);
+}
+
+/**
  * Creates a table with the name that's
  * passed into the function. Table has
  * an `id` (text) and `data` (jsonb) columns
@@ -250,8 +262,6 @@ function createSchema(name) {
   return knex.raw('CREATE SCHEMA IF NOT EXISTS ??;', [name]);
 }
 
-
-
 module.exports.connect = connect;
 module.exports.put = put;
 module.exports.get = get;
@@ -259,7 +269,7 @@ module.exports.del = del;
 module.exports.patch = patch('data');
 module.exports.batch = batch;
 module.exports.getMeta = getMeta;
-module.exports.putMeta = META_PUT_PATCH_FN;
+module.exports.putMeta = putMeta;
 module.exports.patchMeta = META_PUT_PATCH_FN;
 module.exports.createReadStream = createReadStream;
 
