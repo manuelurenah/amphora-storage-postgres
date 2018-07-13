@@ -11,4 +11,3 @@ module.exports.putMeta = db.putMeta;
 module.exports.patchMeta = db.patchMeta;
 module.exports.getMeta = db.getMeta;
 module.exports.createReadStream = db.createReadStream;
-module.exports.query = db.query;
