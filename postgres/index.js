@@ -32,8 +32,8 @@ function createNonComponentTables() {
  * @return {Promise}
  */
 function createTables() {
-  return bluebird.all(getComponents().map(component => client.createTable(`components."${component}"`)))
-    .then(() => bluebird.all(getLayouts().map(layout => client.createTableWithMeta(`layouts."${layout}"`))))
+  return bluebird.all(getComponents().map(component => client.createTable(`components.${component}`)))
+    .then(() => bluebird.all(getLayouts().map(layout => client.createTableWithMeta(`layouts.${layout}`))))
     .then(() => client.createTableWithMeta('pages'))
     .then(() => createNonComponentTables());
 

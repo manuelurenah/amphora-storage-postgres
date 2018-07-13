@@ -222,7 +222,7 @@ function getMeta(key) {
  * @returns {Promise}
  */
 function createTable(table) {
-  return knex.raw('CREATE TABLE IF NOT EXISTS ?? ( id TEXT PRIMARY KEY NOT NULL, data JSONB, meta JSONB );', [table]);
+  return knex.raw('CREATE TABLE IF NOT EXISTS ?? ( id TEXT PRIMARY KEY NOT NULL, data JSONB );', [table]);
 }
 
 /**
