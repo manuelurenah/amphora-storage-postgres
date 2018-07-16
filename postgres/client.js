@@ -111,7 +111,7 @@ function patch(prop) {
   return (key, value) => {
     const { schema, table } = findSchemaAndTable(key);
 
-    return knex.raw('UPDATE ?? SET ?? = ?? || ? WHERE id = ?', [`${schema ? `${schema}.` : ''}${table}`, prop, prop, JSON.stringify(value), key]);
+    return raw('UPDATE ?? SET ?? = ?? || ? WHERE id = ?', [`${schema ? `${schema}.` : ''}${table}`, prop, prop, JSON.stringify(value), key]);
   };
 }
 
@@ -142,7 +142,7 @@ function onConflictPut(id, data, dataProp, schema, table) {
 
   update = knex.queryBuilder().update(putObj);
 
-  return knex.raw('? ON CONFLICT (id) DO ? returning *', [insert, update])
+  return raw('? ON CONFLICT (id) DO ? returning *', [insert, update])
     .then(() => data);
 }
 
@@ -234,7 +234,7 @@ function putMeta(key, value) {
  * @returns {Promise}
  */
 function createTable(table) {
-  return knex.raw('CREATE TABLE IF NOT EXISTS ?? ( id TEXT PRIMARY KEY NOT NULL, data JSONB );', [table]);
+  return raw('CREATE TABLE IF NOT EXISTS ?? ( id TEXT PRIMARY KEY NOT NULL, data JSONB );', [table]);
 }
 
 /**
@@ -247,7 +247,7 @@ function createTable(table) {
  * @returns {Promise}
  */
 function createTableWithMeta(table) {
-  return knex.raw('CREATE TABLE IF NOT EXISTS ?? ( id TEXT PRIMARY KEY NOT NULL, data JSONB, meta JSONB );', [table]);
+  return raw('CREATE TABLE IF NOT EXISTS ?? ( id TEXT PRIMARY KEY NOT NULL, data JSONB, meta JSONB );', [table]);
 
 }
 
@@ -259,13 +259,20 @@ function createTableWithMeta(table) {
  * @returns {Promise}
  */
 function createSchema(name) {
-  return knex.raw('CREATE SCHEMA IF NOT EXISTS ??;', [name]);
+  return raw('CREATE SCHEMA IF NOT EXISTS ??;', [name]);
+}
+
+function raw(cmd, args = []) {
+  if (!Array.isArray(args)) throw new Error('`args` must be an array!');
+
+  return knex.raw(cmd, args);
 }
 
 module.exports.connect = connect;
 module.exports.put = put;
 module.exports.get = get;
 module.exports.del = del;
+module.exports.raw = raw;
 module.exports.patch = patch('data');
 module.exports.batch = batch;
 module.exports.getMeta = getMeta;

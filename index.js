@@ -10,4 +10,5 @@ module.exports.batch = db.batch;
 module.exports.putMeta = db.putMeta;
 module.exports.patchMeta = db.patchMeta;
 module.exports.getMeta = db.getMeta;
+module.exports.raw = db.raw;
 module.exports.createReadStream = db.createReadStream;
