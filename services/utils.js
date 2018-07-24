@@ -4,6 +4,12 @@ const { DATA_STRUCTURES } = require('./constants'),
   { getComponentName, getLayoutName } = require('clayutils'),
   { isList, isUri } = require('clayutils');
 
+function getListName(uri) {
+  const result = /_lists\/(.+?)[\/\.]/.exec(uri) || /_lists\/(.*)/.exec(uri);
+
+  return result && result[1];
+}
+
 /**
  * Try to parse the stringified object.
  * Return the value if it does not parse.
@@ -26,9 +32,9 @@ function findSchemaAndTable(key) {
     let DATA_TYPE = DATA_STRUCTURES[i];
 
     if (key.indexOf(`/_${DATA_TYPE}`) > -1) {
-      if (DATA_TYPE === 'components' || DATA_TYPE === 'layouts') {
+      if (DATA_TYPE === 'components' || DATA_TYPE === 'layouts' || DATA_TYPE === 'lists') {
         schema = DATA_TYPE;
-        table = getComponentName(key) || getLayoutName(key);
+        table = getComponentName(key) || getLayoutName(key) || getListName(key);
       } else {
         table = DATA_TYPE;
       }
@@ -50,9 +56,18 @@ function findSchemaAndTable(key) {
  * @return {Object}
  */
 function wrapInObject(key, _value) {
-  if (!isList(key) && !isUri(key)) return _value;
+  if (!isUri(key)) return _value;
 
+  console.log(`\n\n\n\n`, _value, '\n\n\n');
   return { _value };
+}
+
+/**
+ *
+ * @param {*} key
+ */
+function isListOrUri(key) {
+  return isList(key) || isUri(key);
 }
 
 /**
@@ -65,9 +80,16 @@ function wrapInObject(key, _value) {
  * @return {String}
  */
 function wrapJSONStringInObject(key, _value) {
-  if (!isList(key) && !isUri(key)) return _value;
+  if (isListOrUri(key)) {
+    if (isList(key)) {
+      console.log(`\n\n\n\n`, _value, '\n\n\n');
+      return `{"_value":"${_value}"}`;
+    } else {
+      return _value;
+    }
+  }
 
-  return `{"_value":"${_value}"}`;
+  return _value;
 }
 
 module.exports.findSchemaAndTable = findSchemaAndTable;

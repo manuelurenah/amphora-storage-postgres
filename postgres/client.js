@@ -4,10 +4,17 @@ const { POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_PORT, POSTGRES
   { notFoundError } = require('../services/errors'),
   { parseOrNot, wrapInObject } = require('../services/utils'),
   { findSchemaAndTable, wrapJSONStringInObject } = require('../services/utils'),
+  { isList, isUri } = require('clayutils'),
   knexLib = require('knex'),
   TransformStream = require('../services/list-transform-stream'),
   META_PUT_PATCH_FN = patch('meta');
 var knex;
+
+function getListName(uri) {
+  const result = /_lists\/(.+?)[\/\.]/.exec(uri) || /_lists\/(.*)/.exec(uri);
+
+  return result && result[1];
+}
 
 /**
  * Connect to the default DB and create the Clay
@@ -83,10 +90,30 @@ function baseQuery(key) {
  * @return {Promise}
  */
 function get(key) {
-  return baseQuery(key)
-    .select('data')
+  const dataProp = 'data',
+    base = isUri(key) ? knex.from('uris') : baseQuery(key);
+
+  return base
+    .select(dataProp)
     .where('id', key)
-    .then(pullValFromRows(key, 'data'));
+    .then(pullValFromRows(key, dataProp));
+}
+
+function getLists() {
+  return knex
+    .withSchema('pg_catalog')
+    .from('pg_tables')
+    .select('tablename')
+    .where('schemaname', 'lists')
+    .then(resp => resp.map(table => table.tablename));
+}
+
+function makeListsTableUnlessExists(key) {
+  // Check advisory locks out. They're cool.
+  // https://hashrocket.com/blog/posts/advisory-locks-in-postgres
+  return raw('SELECT pg_try_advisory_lock(1)', [])
+    .then(() => createTable(`lists.${getListName(key)}`))
+    .then(() => raw('SELECT pg_advisory_unlock(1);', []));
 }
 
 /**
@@ -98,8 +125,9 @@ function get(key) {
  */
 function put(key, value) {
   const { schema, table } = findSchemaAndTable(key);
+  var promise = isList(key) ? makeListsTableUnlessExists(key) : Promise.resolve();
 
-  return onConflictPut(key, wrapInObject(key,parseOrNot(value)), 'data', schema, table);
+  return promise.then(() => onConflictPut(key, wrapInObject(key,parseOrNot(value)), 'data', schema, table));
 }
 
 /**
@@ -147,6 +175,24 @@ function onConflictPut(id, data, dataProp, schema, table) {
 }
 
 /**
+ *
+ * @param {*} id
+ * @param {*} value
+ */
+function onConflictPutUri(id, data) {
+  var insert, update;
+
+  insert = knex.table('uris')
+    .where('id', id)
+    .insert({ id, data });
+
+  update = knex.queryBuilder().update({ id, data });
+
+  return raw('? ON CONFLICT (id) DO ? returning *', [insert, update])
+    .then(() => data);
+}
+
+/**
  * Insert a row into the DB
  *
  * @param  {String} key
@@ -171,7 +217,7 @@ function batch(ops) {
     let { key, value } = ops[i],
       { table, schema } = findSchemaAndTable(key);
 
-    commands.push(onConflictPut(key, wrapJSONStringInObject(key, value), 'data', schema, table));
+    commands.push(isUri(key) ? onConflictPutUri(key, value) : onConflictPut(key, wrapJSONStringInObject(key, value), 'data', schema, table));
   }
 
   return Promise.all(commands);
@@ -248,7 +294,6 @@ function createTable(table) {
  */
 function createTableWithMeta(table) {
   return raw('CREATE TABLE IF NOT EXISTS ?? ( id TEXT PRIMARY KEY NOT NULL, data JSONB, meta JSONB );', [table]);
-
 }
 
 /**
@@ -262,6 +307,11 @@ function createSchema(name) {
   return raw('CREATE SCHEMA IF NOT EXISTS ??;', [name]);
 }
 
+/**
+ *
+ * @param {*} cmd
+ * @param {*} args
+ */
 function raw(cmd, args = []) {
   if (!Array.isArray(args)) throw new Error('`args` must be an array!');
 
@@ -271,6 +321,7 @@ function raw(cmd, args = []) {
 module.exports.connect = connect;
 module.exports.put = put;
 module.exports.get = get;
+module.exports.getLists = getLists;
 module.exports.del = del;
 module.exports.raw = raw;
 module.exports.patch = patch('data');

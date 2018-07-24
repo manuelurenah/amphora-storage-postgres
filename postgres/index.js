@@ -6,19 +6,15 @@ const client = require('./client'),
   { getComponents, getLayouts } = require('amphora-fs');
 
 /**
- * Create all the tables for the different Clay data structures.
- * But we skip components because that's in it's own Schema and requires
- * slightly different treatment
  *
- * @return {Promise}
  */
-function createNonComponentTables() {
+function createRemainingTables() {
   var promises = [];
 
   for (let i = 0; i < DATA_STRUCTURES.length; i++) {
     let STRUCTURE = DATA_STRUCTURES[i];
 
-    if (STRUCTURE !== 'components' && STRUCTURE !== 'pages' && STRUCTURE !== 'layouts') {
+    if (STRUCTURE !== 'components' && STRUCTURE !== 'pages' && STRUCTURE !== 'layouts' && STRUCTURE !== 'uris') {
       promises.push(client.createTable(STRUCTURE));
     }
   }
@@ -35,7 +31,8 @@ function createTables() {
   return bluebird.all(getComponents().map(component => client.createTable(`components.${component}`)))
     .then(() => bluebird.all(getLayouts().map(layout => client.createTableWithMeta(`layouts.${layout}`))))
     .then(() => client.createTableWithMeta('pages'))
-    .then(() => createNonComponentTables());
+    .then(() => client.raw('CREATE TABLE IF NOT EXISTS ?? ( id TEXT PRIMARY KEY NOT NULL, data TEXT NOT NULL );', ['uris']))
+    .then(() => createRemainingTables());
 
 }
 
@@ -48,6 +45,7 @@ function setup() {
   return client.connect()
     .then(() => client.createSchema('components'))
     .then(() => client.createSchema('layouts'))
+    .then(() => client.createSchema('lists'))
     .then(createTables)
     .then(() => ({ server: `${POSTGRES_HOST}${POSTGRES_PORT}:${POSTGRES_PORT}` }));
 }
