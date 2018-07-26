@@ -2,17 +2,21 @@
 
 var { createClient, get, put, batch, del, stubClient } = require('./index'),
   redis = require('redis'),
-  FAKE_DATA = { foo: true, bar: true},
-  FAKE_OPS = [{
-    key: 'foo.com/_components/bar',
-    value: '{"foo": true}'
-  }, {
-    key: 'foo.com/_components/bar@published',
-    value: '{"foo": true}'
-  }, {
-    key: 'foo.com/_uris/bar',
-    value: 'somestring'
-  }],
+  FAKE_DATA = { foo: true, bar: true },
+  FAKE_OPS = [
+    {
+      key: 'foo.com/_components/bar',
+      value: '{"foo": true}'
+    },
+    {
+      key: 'foo.com/_components/bar@published',
+      value: '{"foo": true}'
+    },
+    {
+      key: 'foo.com/_uris/bar',
+      value: 'somestring'
+    }
+  ],
   CLIENT = {
     on: jest.fn(),
     hmsetAsync: jest.fn(),

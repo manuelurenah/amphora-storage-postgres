@@ -1,6 +1,6 @@
 'use strict';
 
-const { parseOrNot, wrapInObject, wrapJSONStringInObject } = require('./utils');
+const { parseOrNot, wrapInObject, wrapJSONStringInObject, findSchemaAndTable, getListName } = require('./utils');
 
 describe('services/utils', () => {
   const testObj = { foo: true, bar: false },
@@ -16,24 +16,36 @@ describe('services/utils', () => {
     });
   });
 
-  // TODO: MODIFY FOR findSchemaAndTable when testing is a priority
-  // describe.each([
-  //   ['site.com/_components/cmpt/instances/foo', 'components."cmpt"'],
-  //   ['site.com/_pages/foo', 'pages'],
-  //   ['site.com/_lists/foo', 'lists'],
-  //   ['site.com/_uris/foo', 'uris'],
-  //   ['site.com/_fake/foo', undefined]
-  // ])
-  // ('findTable', (key, collection) => {
-  //   test(`returns ${collection}`, () => {
-  //     expect(findTable(key)).toBe(collection);
-  //   });
-  // });
+  describe.each([
+    ['nymag.com/_components/follow/instances/facebook', 'components', 'follow'],
+    ['nymag.com/_layouts/layout-column/instances/someinstance', 'layouts', 'layout-column'],
+    ['nymag.com/_pages/bnltYWcuY29tL2F1dGhvci9BYnJhaGFtJTIwUmllc21hbi8', undefined, 'pages'],
+    ['nymag.com/_lists/some-list/bnltYWcuY29tL2F1dGhvci9BYnJhaGFtJTIwUmllc21hbi8', 'lists', 'some-list'],
+    ['nymag.com/_users/bnltYWcuY29tL2F1dGhvci9BYnJhaGFtJTIwUmllc21hbi8', undefined, 'users'],
+  ])
+  ('findSchemaAndTable', (key, expectedSchema, expectedTable) => {
+    test(`gets schema and table from a ${expectedTable} key`, () => {
+      const { schema, table } = findSchemaAndTable(key);
+
+      expect(schema).toBe(expectedSchema);
+      expect(table).toBe(expectedTable);
+    });
+  });
+
+  describe.each([
+    ['_lists/instance', 'instance'],
+    ['_lists/anotherInstance', 'anotherInstance'],
+    ['_uris/anotherInstance', null],
+  ])('getListName', (uri, expected) => {
+    test('get the list name from a uri', () => {
+      expect(getListName(uri)).toBe(expected);
+    });
+  });
 
   describe.each([
     ['components', 'site.com/_components/cmpt/instances/foo', testObj, testObj],
     ['pages', 'site.com/_pages/foo', testObj, testObj],
-    ['lists', 'site.com/_lists/foo', testObj, { _value: testObj }],
+    ['lists', 'site.com/_lists/foo', testObj, testObj],
     ['uris', 'site.com/_uris/foo', testObj, { _value: testObj }]
   ])
   ('wrapInObject', (type, key, value, result) => {
@@ -46,7 +58,7 @@ describe('services/utils', () => {
     ['components', 'site.com/_components/cmpt/instances/foo', stringifiedTestObj, stringifiedTestObj],
     ['pages', 'site.com/_pages/foo', stringifiedTestObj, stringifiedTestObj],
     ['lists', 'site.com/_lists/foo', stringifiedTestObj, `{"_value":"${stringifiedTestObj}"}`],
-    ['uris', 'site.com/_uris/foo', stringifiedTestObj, `{"_value":"${stringifiedTestObj}"}`]
+    ['uris', 'site.com/_uris/foo', stringifiedTestObj, stringifiedTestObj]
   ])
   ('wrapJSONStringInObject', (type, key, value, result) => {
     test(`wraps ${type} correctly`, () => {

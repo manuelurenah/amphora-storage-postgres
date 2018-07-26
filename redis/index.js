@@ -22,10 +22,10 @@ function createClient() {
 }
 
 /**
- * Determine if we should write to cache
+ * Determines if we should write to cache
  *
  * @param  {String} key
- * @return {String}
+ * @return {boolean}
  */
 function shouldProcess(key) {
   return isPublished(key) || isUri(key) || isUser(key);
