@@ -261,9 +261,9 @@ function getMeta(key) {
 
 /**
  * [putMeta description]
- * @param  {[type]} key   [description]
- * @param  {[type]} value [description]
- * @return {[type]}       [description]
+ * @param {String} key [description]
+ * @param {Object} value [description]
+ * @return {Promise} [description]
  */
 function putMeta(key, value) {
   const { schema, table } = findSchemaAndTable(key);
@@ -336,5 +336,9 @@ module.exports.createSchema = createSchema;
 module.exports.createTable = createTable;
 module.exports.createTableWithMeta = createTableWithMeta;
 
-// For testing
-module.exports.setClient = mock => client = mock;
+// Exposed for testing
+module.exports.pullValFromRows = pullValFromRows;
+module.exports.createDBIfNotExists = createDBIfNotExists;
+module.exports.baseQuery = baseQuery;
+module.exports.setClient = (mock) => knex = mock;
+module.exports.onConflictPut = onConflictPut;
