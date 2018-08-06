@@ -58,13 +58,14 @@ function findSchemaAndTable(key) {
 function wrapInObject(key, _value) {
   if (!isUri(key)) return _value;
 
-  console.log(`\n\n\n\n`, _value, '\n\n\n');
+  console.log('\n\n\n\n', _value, '\n\n\n');
   return { _value };
 }
 
 /**
  *
  * @param {*} key
+ * @return {Boolean}
  */
 function isListOrUri(key) {
   return isList(key) || isUri(key);
@@ -82,7 +83,7 @@ function isListOrUri(key) {
 function wrapJSONStringInObject(key, _value) {
   if (isListOrUri(key)) {
     if (isList(key)) {
-      console.log(`\n\n\n\n`, _value, '\n\n\n');
+      console.log('\n\n\n\n', _value, '\n\n\n');
       return `{"_value":"${_value}"}`;
     } else {
       return _value;
@@ -96,3 +97,6 @@ module.exports.findSchemaAndTable = findSchemaAndTable;
 module.exports.parseOrNot = parseOrNot;
 module.exports.wrapInObject = wrapInObject;
 module.exports.wrapJSONStringInObject = wrapJSONStringInObject;
+
+// Exposed for testing
+module.exports.getListName = getListName;

@@ -127,13 +127,13 @@ function put(key, value) {
   const { schema, table } = findSchemaAndTable(key);
   var promise = isList(key) ? makeListsTableUnlessExists(key) : Promise.resolve();
 
-  return promise.then(() => onConflictPut(key, wrapInObject(key,parseOrNot(value)), 'data', schema, table));
+  return promise.then(() => onConflictPut(key, wrapInObject(key, parseOrNot(value)), 'data', schema, table));
 }
 
 /**
- *
- * @param {*} key
- * @param {*} value
+ * Returns a function that handles data patching based on the curried prop.
+ * @param {String} prop
+ * @return {Function}
  */
 function patch(prop) {
   return (key, value) => {
@@ -177,7 +177,8 @@ function onConflictPut(id, data, dataProp, schema, table) {
 /**
  *
  * @param {*} id
- * @param {*} value
+ * @param {*} data
+ * @return {Promise<Object>}
  */
 function onConflictPutUri(id, data) {
   var insert, update;
@@ -261,9 +262,9 @@ function getMeta(key) {
 
 /**
  * [putMeta description]
- * @param  {[type]} key   [description]
- * @param  {[type]} value [description]
- * @return {[type]}       [description]
+ * @param {String} key [description]
+ * @param {Object} value [description]
+ * @return {Promise} [description]
  */
 function putMeta(key, value) {
   const { schema, table } = findSchemaAndTable(key);
@@ -308,9 +309,10 @@ function createSchema(name) {
 }
 
 /**
- *
- * @param {*} cmd
- * @param {*} args
+ * Executes a raw query against the database
+ * @param {String} cmd
+ * @param {Array<Any>} args
+ * @return {Promise<Object>}
  */
 function raw(cmd, args = []) {
   if (!Array.isArray(args)) throw new Error('`args` must be an array!');
@@ -325,6 +327,7 @@ module.exports.getLists = getLists;
 module.exports.del = del;
 module.exports.raw = raw;
 module.exports.patch = patch('data');
+module.exports.plainPatch = patch;
 module.exports.batch = batch;
 module.exports.getMeta = getMeta;
 module.exports.putMeta = putMeta;
@@ -336,5 +339,12 @@ module.exports.createSchema = createSchema;
 module.exports.createTable = createTable;
 module.exports.createTableWithMeta = createTableWithMeta;
 
-// For testing
-module.exports.setClient = mock => client = mock;
+// Exposed for testing
+module.exports.pullValFromRows = pullValFromRows;
+module.exports.createDBIfNotExists = createDBIfNotExists;
+module.exports.baseQuery = baseQuery;
+module.exports.setClient = (mock) => knex = mock;
+module.exports.onConflictPut = onConflictPut;
+module.exports.getListName = getListName;
+module.exports.makeListsTableUnlessExists = makeListsTableUnlessExists;
+module.exports.onConflictPutUri = onConflictPutUri;

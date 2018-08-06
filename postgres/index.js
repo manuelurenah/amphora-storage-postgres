@@ -6,7 +6,7 @@ const client = require('./client'),
   { getComponents, getLayouts } = require('amphora-fs');
 
 /**
- *
+ * @return {Promise[]}
  */
 function createRemainingTables() {
   var promises = [];
