@@ -5,6 +5,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Gitbook
+_book
+
 # Runtime data
 pids
 *.pid
@@ -59,3 +62,6 @@ typings/
 
 # next.js build output
 .next
+
+# WebStorm
+.idea
