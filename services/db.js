@@ -1,7 +1,8 @@
 'use strict';
 
 var redis = require('../redis'),
-  postgres = require('../postgres/client');
+  postgres = require('../postgres/client'),
+  { CACHE_ENABLED } = require('./constants');
 
 /**
  * Write a single value to cache and db
@@ -11,8 +12,15 @@ var redis = require('../redis'),
  * @return {Promise}
  */
 function put(key, value) {
-  return redis.put(key, value)
-    .then(() => postgres.put(key, value));
+  return postgres.put(key, value)
+    .then((res) => {
+      // persist to cache only if cache is set up/enabled, return postgres result regardless
+      if (CACHE_ENABLED) {
+        return redis.put(key, value).then(() => res);
+      }
+
+      return res;
+    });
 }
 
 /**
@@ -35,8 +43,14 @@ function get(key) {
  * @return {Promise}
  */
 function batch(ops) {
-  return redis.batch(ops)
-    .then(() => postgres.batch(ops));
+  return postgres.batch(ops)
+    .then((res) => {
+      if (CACHE_ENABLED) {
+        return redis.batch(ops).then(() => res);
+      }
+
+      return res;
+    });
 }
 
 /**

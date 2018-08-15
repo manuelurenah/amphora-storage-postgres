@@ -42,6 +42,10 @@ function createTables() {
  * @return {Promise}
  */
 function setup() {
+  if (!POSTGRES_HOST) {
+    return Promise.reject(new Error('No postgres host set'));
+  }
+
   return client.connect()
     .then(() => client.createSchema('components'))
     .then(() => client.createSchema('layouts'))

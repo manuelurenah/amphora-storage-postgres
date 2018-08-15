@@ -8,9 +8,9 @@ module.exports.POSTGRES_PORT     = process.env.CLAY_STORAGE_POSTGRES_PORT     ||
 module.exports.POSTGRES_DB       = process.env.CLAY_STORAGE_POSTGRES_DB       || 'clay';
 
 // Redis
-module.exports.CACHE_ENABLED     = process.env.CLAY_STORAGE_CACHE_ENABLED     || false;
-module.exports.REDIS_HASH        = process.env.CLAY_STORAGE_REDIS_HASH        || 'clay';
-module.exports.REDIS_URL         = process.env.CLAY_STORAGE_REDIS_HOST        || 'redis://localhost:6379';
+module.exports.CACHE_ENABLED     = process.env.CLAY_STORAGE_POSTGRES_CACHE_ENABLED     || false;
+module.exports.REDIS_HASH        = process.env.CLAY_STORAGE_POSTGRES_CACHE_HASH        || 'clay';
+module.exports.REDIS_URL         = process.env.CLAY_STORAGE_POSTGRES_CACHE_HOST;
 
 // Application code
 module.exports.DATA_STRUCTURES   = ['components', 'layouts', 'pages', 'uris', 'lists', 'users'];
