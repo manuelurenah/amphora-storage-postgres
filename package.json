@@ -6,12 +6,7 @@
   "scripts": {
     "eslint": "eslint --max-warnings 0 postgres redis services",
     "jest": "jest",
-    "test": "npm run eslint && npm run jest",
-    "docs:clean": "rimraf ./_book",
-    "docs:prepare": "gitbook install",
-    "docs:watch": "npm run docs:prepare && gitbook serve",
-    "docs:build": "gitbook build ./",
-    "docs:publish": "npm run docs:clean && npm run docs:build && cd _book && git init && git commit --allow-empty -m 'update book' && git checkout -b gh-pages && touch .nojekyll && git add . && git commit -am 'update book' && git push git@github.com:clay/amphora gh-pages --force"
+    "test": "npm run eslint && npm run jest"
   },
   "repository": {
     "type": "git",
@@ -20,13 +15,12 @@
   "author": "New York Media",
   "license": "MIT",
   "dependencies": {
-    "JSONStream": "^1.3.3",
-    "amphora-fs": "^0.3.0",
+    "amphora-fs": "^1.0.1",
     "bluebird": "^3.5.1",
     "clay-log": "^1.3.0",
     "clayutils": "^2.6.0",
     "highland": "^2.13.0",
-    "knex": "^0.15.0",
+    "knex": "^0.15.2",
     "pg": "^7.4.3",
     "pg-query-stream": "^1.1.1",
     "redis": "^2.8.0"
@@ -34,11 +28,6 @@
   "devDependencies": {
     "coveralls": "^3.0.1",
     "eslint": "^5.0.1",
-    "gitbook-cli": "^2.3.2",
-    "gitbook-plugin-accordion": "^1.1.3",
-    "gitbook-plugin-anchorjs": "^2.0.0",
-    "gitbook-plugin-bootstrap-callout": "^0.1.2",
-    "gitbook-plugin-github": "^3.0.0",
     "jest": "^23.2.0"
   }
 }
