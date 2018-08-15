@@ -18,7 +18,6 @@ describe('postgres/index', () => {
       expect(client.createSchema.mock.calls.length).toBe(2);
       expect(client.createSchema.mock.calls[0][0]).toBe('components');
       expect(client.createSchema.mock.calls[1][0]).toBe('layouts');
-      expect(client.createSchema.mock.calls[2][0]).toBe('lists');
       expect(resp).toHaveProperty('server');
     });
   });
