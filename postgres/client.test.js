@@ -181,6 +181,18 @@ describe('postgres/client', () => {
       });
     });
 
+    test('runs a raw query in the database when no args are passed', () => {
+      const sql = 'some sql',
+        raw = jest.fn(() => Promise.resolve({}));
+
+      client.setClient({ raw });
+
+      return client.raw(sql).then(() => {
+        expect(raw.mock.calls.length).toBe(1);
+        expect(raw.mock.calls[0][0]).toBe(sql);
+      });
+    });
+
     test('fails if args are not an array', () => {
       const raw = jest.fn(() => Promise.resolve({}));
 
@@ -367,6 +379,22 @@ describe('postgres/client', () => {
         expect(raw.mock.calls.length).toBe(1);
         expect(raw.mock.calls[0][0]).toBe('UPDATE ?? SET ?? = ?? || ? WHERE id = ?');
         expect(raw.mock.calls[0][1]).toEqual([`${schema}.${table}`, 'data', 'data', JSON.stringify(value), key]);
+        expect(data).toEqual(mockResult);
+      });
+    });
+
+    test('patches a row in the database table without schema', () => {
+      const key = 'nymag.com/_pages/page-1',
+        value = {
+          id: 'some id',
+          data: 'some data'
+        },
+        table = 'pages';
+
+      return client.patch(key, value).then((data) => {
+        expect(raw.mock.calls.length).toBe(1);
+        expect(raw.mock.calls[0][0]).toBe('UPDATE ?? SET ?? = ?? || ? WHERE id = ?');
+        expect(raw.mock.calls[0][1]).toEqual([`${table}`, 'data', 'data', JSON.stringify(value), key]);
         expect(data).toEqual(mockResult);
       });
     });
