@@ -1,7 +1,8 @@
 'use strict';
 
 const postgres = require('../postgres'),
-  redis = require('../redis');
+  redis = require('../redis'),
+  { CACHE_ENABLED } = require('./constants');
 var log = require('./log').setup({ file: __filename });
 
 /**
@@ -24,14 +25,21 @@ function logConnectionError(err) {
 /**
  * Connect and create schemas/tables
  *
+ * @param  {Boolean} testCacheEnabled used for tests
  * @return {Promise}
  */
-function setup() {
-  return postgres.setup()
-    .then(resp => logConnectionSuccess('Postgres', resp))
-    .then(redis.createClient)
-    .then(resp => logConnectionSuccess('Redis', resp))
-    .catch(logConnectionError);
+function setup(testCacheEnabled) {
+  const promises = [],
+    cacheEnabled = testCacheEnabled || CACHE_ENABLED;
+
+  promises.push(postgres.setup().then(resp => logConnectionSuccess('Postgres', resp)));
+
+  // only create redis client if caching is enabled
+  if (cacheEnabled) {
+    promises.push(redis.createClient().then(resp => logConnectionSuccess('Redis', resp)));
+  }
+
+  return Promise.all(promises).catch(logConnectionError);
 }
 
 module.exports = setup;

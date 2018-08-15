@@ -127,7 +127,6 @@ describe('postgres/client', () => {
         expect(select.mock.calls.length).toBe(1);
         expect(select.mock.calls[0][0]).toBe('data');
         expect(where.mock.calls.length).toBe(1);
-        expect(from.mock.calls.length).toBe(1);
         expect(where.mock.calls[0][0]).toBe('id');
         expect(where.mock.calls[0][1]).toBe(key);
         expect(data).toEqual(queryResult[0].data);
@@ -179,6 +178,18 @@ describe('postgres/client', () => {
         expect(raw.mock.calls.length).toBe(1);
         expect(raw.mock.calls[0][0]).toBe(sql);
         expect(raw.mock.calls[0][1]).toEqual(args);
+      });
+    });
+
+    test('runs a raw query in the database when no args are passed', () => {
+      const sql = 'some sql',
+        raw = jest.fn(() => Promise.resolve({}));
+
+      client.setClient({ raw });
+
+      return client.raw(sql).then(() => {
+        expect(raw.mock.calls.length).toBe(1);
+        expect(raw.mock.calls[0][0]).toBe(sql);
       });
     });
 
@@ -371,6 +382,22 @@ describe('postgres/client', () => {
         expect(data).toEqual(mockResult);
       });
     });
+
+    test('patches a row in the database table without schema', () => {
+      const key = 'nymag.com/_pages/page-1',
+        value = {
+          id: 'some id',
+          data: 'some data'
+        },
+        table = 'pages';
+
+      return client.patch(key, value).then((data) => {
+        expect(raw.mock.calls.length).toBe(1);
+        expect(raw.mock.calls[0][0]).toBe('UPDATE ?? SET ?? = ?? || ? WHERE id = ?');
+        expect(raw.mock.calls[0][1]).toEqual([`${table}`, 'data', 'data', JSON.stringify(value), key]);
+        expect(data).toEqual(mockResult);
+      });
+    });
   });
 
   describe('createReadStream', () => {
@@ -469,21 +496,20 @@ describe('postgres/client', () => {
 
     test('inserts a row into the database', () => {
       const key = 'nymag.com/_lists/some-list/someinstance',
-        tableName = 'some-list';
+        tableName = 'lists';
 
       client.setClient(knex);
 
       return client.put(key, data).then((data) => {
-        expect(withSchema.mock.calls.length).toBe(1);
         expect(table.mock.calls.length).toBe(1);
         expect(table.mock.calls[0][0]).toBe(tableName);
         expect(insert.mock.calls.length).toBe(1);
         expect(insert.mock.calls[0][0]).toEqual({ id: key, data });
         expect(queryBuilder.mock.calls.length).toBe(1);
         expect(update.mock.calls.length).toBe(1);
-        expect(raw.mock.calls.length).toBe(4);
-        expect(raw.mock.calls[3][0]).toBe('? ON CONFLICT (id) DO ? returning *');
-        expect(raw.mock.calls[3][1]).toEqual(['insert sql', 'update sql']);
+        expect(raw.mock.calls.length).toBe(1);
+        expect(raw.mock.calls[0][0]).toBe('? ON CONFLICT (id) DO ? returning *');
+        expect(raw.mock.calls[0][1]).toEqual(['insert sql', 'update sql']);
         expect(data).toEqual(data);
       });
     });
@@ -582,8 +608,7 @@ describe('postgres/client', () => {
     test('batches inserts of uris into the database', () => {
       const update = jest.fn(() => 'update sql'),
         insert = jest.fn(() => 'insert sql'),
-        where = jest.fn(() => ({ insert })),
-        table = jest.fn(() => ({ where })),
+        table = jest.fn(() => ({ insert })),
         withSchema = jest.fn(() => ({ table })),
         queryBuilder = jest.fn(() => ({ update })),
         raw = jest.fn(() => Promise.resolve({})),

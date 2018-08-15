@@ -6,18 +6,24 @@ const bluebird = require('bluebird'),
   { isPublished, isUri, isUser } = require('clayutils'),
   { notFoundError, logGenericError } = require('../services/errors');
 
-
 /**
  * Connect to Redis and store the client
  *
+ * @param {String} testRedisUrl, used for testing only
  * @return {Promise}
  */
-function createClient() {
+function createClient(testRedisUrl) {
+  const redisUrl = testRedisUrl || REDIS_URL;
+
+  if (!redisUrl) {
+    return bluebird.reject(new Error('No Redis URL set'));
+  }
+
   return new bluebird(resolve => {
-    module.exports.client = redis.createClient(REDIS_URL);
+    module.exports.client = redis.createClient(redisUrl);
     module.exports.client.on('error', logGenericError(__filename));
 
-    resolve({ server: REDIS_URL });
+    resolve({ server: redisUrl });
   });
 }
 
@@ -51,6 +57,10 @@ function put(key, value) {
  * @return {Promise}
  */
 function get(key) {
+  if (!module.exports.client) {
+    return bluebird.reject(notFoundError(key));
+  }
+
   return module.exports.client.hgetAsync(REDIS_HASH, key)
     .then(data => data || bluebird.reject(notFoundError(key)));
 }
@@ -89,7 +99,7 @@ function batch(ops) {
  * @return {[type]}
  */
 function del(key) {
-  if (!shouldProcess(key)) return bluebird.resolve();
+  if (!shouldProcess(key) || !module.exports.client) return bluebird.resolve();
 
   return module.exports.client.hdelAsync(REDIS_HASH, key);
 }

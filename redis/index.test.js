@@ -65,6 +65,15 @@ describe('redis', () => {
   });
 
   describe('get', () => {
+    test('Rejects with a NotFoundError if there is no redis client', () => {
+      stubClient();
+
+      return get('someKey')
+        .catch((err) => {
+          expect(err.name).toEqual('NotFoundError');
+        });
+    });
+
     test('retrieves data from Redis', () => {
       CLIENT.hgetAsync.mockResolvedValue(JSON.stringify(FAKE_DATA));
       return get('somekey')
@@ -116,12 +125,21 @@ describe('redis', () => {
   });
 
   describe('createClient', () => {
-    redis.createClient = jest.fn();
-    redis.createClient.mockReturnValue(CLIENT);
+    test('creates a redis client if there is a redis url set', () => {
+      redis.createClient = jest.fn();
+      redis.createClient.mockReturnValue(CLIENT);
 
-    return createClient()
-      .then(resp => {
-        expect(resp).toHaveProperty('server', 'redis://localhost:6379');
-      });
+      return createClient('redis://localhost:6379')
+        .then(resp => {
+          expect(resp).toHaveProperty('server', 'redis://localhost:6379');
+        });
+    });
+
+    test('throws if there is no redis url set', () => {
+      return createClient()
+        .catch(err => {
+          expect(err).toHaveProperty('message', 'No Redis URL set');
+        });
+    });
   });
 });
