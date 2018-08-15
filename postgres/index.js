@@ -33,7 +33,6 @@ function createTables() {
     .then(() => client.createTableWithMeta('pages'))
     .then(() => client.raw('CREATE TABLE IF NOT EXISTS ?? ( id TEXT PRIMARY KEY NOT NULL, data TEXT NOT NULL );', ['uris']))
     .then(() => createRemainingTables());
-
 }
 
 /**
@@ -41,8 +40,10 @@ function createTables() {
  *
  * @return {Promise}
  */
-function setup() {
-  if (!POSTGRES_HOST) {
+function setup(testPostgresHost) {
+  const postgresHost = testPostgresHost || POSTGRES_HOST;
+
+  if (!postgresHost) {
     return Promise.reject(new Error('No postgres host set'));
   }
 
@@ -50,7 +51,7 @@ function setup() {
     .then(() => client.createSchema('components'))
     .then(() => client.createSchema('layouts'))
     .then(createTables)
-    .then(() => ({ server: `${POSTGRES_HOST}${POSTGRES_PORT}:${POSTGRES_PORT}` }));
+    .then(() => ({ server: `${postgresHost}${POSTGRES_PORT}:${POSTGRES_PORT}` }));
 }
 
 module.exports.setup = setup;
