@@ -52,7 +52,6 @@ function del(key) {
 
 module.exports.put = put;
 module.exports.get = get;
-module.exports.getLists = postgres.getLists;
 module.exports.del = del;
 module.exports.batch = batch;
 module.exports.raw = postgres.raw;

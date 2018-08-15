@@ -9,17 +9,6 @@ jest.mock('knex');
 jest.mock('../services/list-transform-stream');
 
 describe('postgres/client', () => {
-  describe.each([
-    ['/_lists/some-list/instances/dnjcjkjdcbddkbdc', 'some-list'],
-    ['/_lists/dnjcjkjdcbddkbdc', 'dnjcjkjdcbddkbdc'],
-    ['/_other/some-list/dnjcjkjdcbddkbdc', null],
-  ])
-  ('getListName', (uri, expected) => {
-    test('gets list name from list uri', () => {
-      expect(client.getListName(uri)).toBe(expected);
-    });
-  });
-
   describe('createDBIfNotExists', () => {
     test('connects to the default db in order to create the clay one', () => {
       const destroy = jest.fn(() => Promise.resolve({})),
@@ -130,7 +119,7 @@ describe('postgres/client', () => {
 
     test('gets the data column of a row from the database by an id of an uri', () => {
       const key = 'nymag.com/_uris/someinstance',
-        knexMock = { from, withSchema, select };
+        knexMock = jest.fn(() => ({ from, withSchema, select }));
 
       client.setClient(knexMock);
 
@@ -203,42 +192,6 @@ describe('postgres/client', () => {
     });
   });
 
-  describe('onConflictPutUri', () => {
-    test('onConflictPutUri', () => {
-      const insert = jest.fn().mockReturnValue('some insert sql'),
-        update = jest.fn().mockReturnValue('some update sql'),
-        raw = jest.fn().mockResolvedValue({}),
-        where = jest.fn().mockReturnValue({ insert }),
-        table = jest.fn().mockReturnValue({ where }),
-        queryBuilder = jest.fn().mockReturnValue({ update }),
-        knex = {
-          queryBuilder,
-          table,
-          raw
-        },
-        key = '_lists',
-        data = {
-          data: 'somedata'
-        };
-
-      client.setClient(knex);
-
-      return client.onConflictPutUri(key, data).then((result) => {
-        expect(table.mock.calls.length).toBe(1);
-        expect(table.mock.calls[0][0]).toBe('uris');
-        expect(where.mock.calls.length).toBe(1);
-        expect(where.mock.calls[0][0]).toBe('id');
-        expect(where.mock.calls[0][1]).toBe(key);
-        expect(insert.mock.calls.length).toBe(1);
-        expect(insert.mock.calls[0][0]).toEqual({ id: key, data });
-        expect(queryBuilder.mock.calls.length).toBe(1);
-        expect(update.mock.calls.length).toBe(1);
-        expect(update.mock.calls[0][0]).toEqual({ id: key, data });
-        expect(result).toEqual(data);
-      });
-    });
-  });
-
   describe('del', () => {
     const key = 'nymag.com/_layouts/layout-column/someinstance',
       where = jest.fn(() => ({ del })),
@@ -270,57 +223,6 @@ describe('postgres/client', () => {
         expect(raw.mock.calls.length).toBe(1);
         expect(raw.mock.calls[0][0]).toBe('CREATE SCHEMA IF NOT EXISTS ??;');
         expect(raw.mock.calls[0][1]).toEqual([args]);
-      });
-    });
-  });
-
-  describe('makeListsTableUnlessExists', () => {
-    test('make list table if it does not exists, using advisory locks for safe concurrency', () => {
-      const knex = {
-          raw: jest.fn().mockResolvedValue({})
-        },
-        key = '/_lists/dljbbcbjkdc/';
-
-      client.setClient(knex);
-
-      return client.makeListsTableUnlessExists(key).then(() => {
-        expect(knex.raw.mock.calls.length).toBe(3);
-        expect(knex.raw.mock.calls[0][0]).toBe('SELECT pg_try_advisory_lock(1)');
-        expect(knex.raw.mock.calls[0][1]).toEqual([]);
-        expect(knex.raw.mock.calls[1][0]).toBe('CREATE TABLE IF NOT EXISTS ?? ( id TEXT PRIMARY KEY NOT NULL, data JSONB );');
-        expect(knex.raw.mock.calls[1][1]).toEqual(['lists.dljbbcbjkdc']);
-        expect(knex.raw.mock.calls[2][0]).toBe('SELECT pg_advisory_unlock(1);');
-        expect(knex.raw.mock.calls[2][1]).toEqual([]);
-      });
-    });
-  });
-
-  describe('getLists', () => {
-    const queryResult = [
-        {
-          tablename: 'sometable'
-        },
-        {
-          tablename: 'anothertable'
-        }
-      ],
-      where = jest.fn().mockResolvedValue(queryResult),
-      select = jest.fn(() => ({ where })),
-      from = jest.fn(() => ({ select })),
-      withSchema = jest.fn(() => ({ from })),
-      knex = { withSchema };
-
-    test('get tables in the lists schema', () => {
-      client.setClient(knex);
-
-      return client.getLists().then((data) => {
-        expect(withSchema.mock.calls.length).toBe(1);
-        expect(from.mock.calls.length).toBe(1);
-        expect(select.mock.calls.length).toBe(1);
-        expect(where.mock.calls.length).toBe(1);
-        expect(data.length).toBe(2);
-        expect(data[0]).toBe(queryResult[0].tablename);
-        expect(data[1]).toBe(queryResult[1].tablename);
       });
     });
   });

@@ -45,7 +45,6 @@ function setup() {
   return client.connect()
     .then(() => client.createSchema('components'))
     .then(() => client.createSchema('layouts'))
-    .then(() => client.createSchema('lists'))
     .then(createTables)
     .then(() => ({ server: `${POSTGRES_HOST}${POSTGRES_PORT}:${POSTGRES_PORT}` }));
 }
