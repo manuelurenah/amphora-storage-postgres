@@ -14,7 +14,7 @@ describe('services/setup', () => {
     postgres.setup.mockResolvedValue({ server: 'localhost:5432' });
     redis.createClient.mockResolvedValue({ server: 'localhost:6379' });
 
-    return setup()
+    return setup(true)
       .then(() => {
         expect(redis.createClient.mock.calls.length).toBe(1);
         expect(postgres.setup.mock.calls.length).toBe(1);
@@ -25,7 +25,7 @@ describe('services/setup', () => {
   test('it logs when it cannot connect to Postgres', () => {
     postgres.setup.mockResolvedValue(Promise.reject(new Error()));
 
-    return setup()
+    return setup(true)
       .catch(() => {
         expect(redis.createClient.mock.calls.length).toBe(1);
         expect(postgres.setup.mock.calls.length).toBe(1);

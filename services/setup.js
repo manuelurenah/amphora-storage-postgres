@@ -27,13 +27,14 @@ function logConnectionError(err) {
  *
  * @return {Promise}
  */
-function setup() {
-  const promises = [];
+function setup(testCacheEnabled) {
+  const promises = [],
+    cacheEnabled = testCacheEnabled || CACHE_ENABLED;
 
   promises.push(postgres.setup().then(resp => logConnectionSuccess('Postgres', resp)));
 
   // only create redis client if caching is enabled
-  if (CACHE_ENABLED) {
+  if (cacheEnabled) {
     promises.push(redis.createClient().then(resp => logConnectionSuccess('Redis', resp)));
   }
 

@@ -3,7 +3,7 @@
 // Postgres
 module.exports.POSTGRES_USER     = process.env.CLAY_STORAGE_POSTGRES_USER     || 'postgres';
 module.exports.POSTGRES_PASSWORD = process.env.CLAY_STORAGE_POSTGRES_PASSWORD || 'example';
-module.exports.POSTGRES_HOST     = process.env.CLAY_STORAGE_POSTGRES_HOST     || 'localhost';
+module.exports.POSTGRES_HOST     = process.env.CLAY_STORAGE_POSTGRES_HOST;
 module.exports.POSTGRES_PORT     = process.env.CLAY_STORAGE_POSTGRES_PORT     || 5432;
 module.exports.POSTGRES_DB       = process.env.CLAY_STORAGE_POSTGRES_DB       || 'clay';
 

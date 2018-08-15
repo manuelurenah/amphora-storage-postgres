@@ -40,10 +40,20 @@ describe('services/db', () => {
       redis.put.mockResolvedValue(Promise.resolve());
       postgres.put.mockResolvedValue(Promise.resolve());
 
-      return put(KEY, VALUE).then(() => {
+      return put(KEY, VALUE, true).then(() => {
         expect(redis.put.mock.calls.length).toBe(1);
         expect(postgres.put.mock.calls.length).toBe(1);
         expect(redis.put).toHaveBeenCalledWith(KEY, VALUE);
+        expect(postgres.put).toHaveBeenCalledWith(KEY, VALUE);
+      });
+    });
+
+    test('it only calls `put` method for Postgres if cache is disabled', () => {
+      postgres.put.mockResolvedValue(Promise.resolve());
+
+      return put(KEY, VALUE, false).then(() => {
+        expect(redis.put.mock.calls.length).toBe(0);
+        expect(postgres.put.mock.calls.length).toBe(1);
         expect(postgres.put).toHaveBeenCalledWith(KEY, VALUE);
       });
     });
@@ -68,10 +78,20 @@ describe('services/db', () => {
       redis.batch.mockResolvedValue(Promise.resolve());
       postgres.batch.mockResolvedValue(Promise.resolve());
 
-      return batch(OPS).then(() => {
+      return batch(OPS, true).then(() => {
         expect(redis.batch.mock.calls.length).toBe(1);
         expect(postgres.batch.mock.calls.length).toBe(1);
         expect(redis.batch).toHaveBeenCalledWith(OPS);
+        expect(postgres.batch).toHaveBeenCalledWith(OPS);
+      });
+    });
+
+    test('it calls the `batch` method for only Postgres if cache is not enabled', () => {
+      postgres.batch.mockResolvedValue(Promise.resolve());
+
+      return batch(OPS, false).then(() => {
+        expect(redis.batch.mock.calls.length).toBe(0);
+        expect(postgres.batch.mock.calls.length).toBe(1);
         expect(postgres.batch).toHaveBeenCalledWith(OPS);
       });
     });
