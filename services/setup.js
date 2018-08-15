@@ -25,6 +25,7 @@ function logConnectionError(err) {
 /**
  * Connect and create schemas/tables
  *
+ * @param  {Boolean} testCacheEnabled used for tests
  * @return {Promise}
  */
 function setup(testCacheEnabled) {

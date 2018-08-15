@@ -9,6 +9,7 @@ var redis = require('../redis'),
  *
  * @param  {String} key
  * @param  {Object} value
+ * @param  {Boolean} testCacheEnabled used for tests
  * @return {Promise}
  */
 function put(key, value, testCacheEnabled) {
@@ -42,6 +43,7 @@ function get(key) {
  * Process a whole group of saves
  *
  * @param  {Array} ops
+ * @param  {Boolean} testCacheEnabled used for tests
  * @return {Promise}
  */
 function batch(ops, testCacheEnabled) {

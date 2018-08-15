@@ -38,6 +38,7 @@ function createTables() {
 /**
  * Connect and create schemas/tables
  *
+ * @param {String} testPostgresHost used for testing
  * @return {Promise}
  */
 function setup(testPostgresHost) {
