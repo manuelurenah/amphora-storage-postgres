@@ -7,7 +7,7 @@ const { POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_PORT, POSTGRES
   knexLib = require('knex'),
   TransformStream = require('../services/list-transform-stream'),
   META_PUT_PATCH_FN = patch('meta');
-var knex;
+var knex, log = require('../services/log').setup({ file: __filename });
 
 /**
  * Connect to the default DB and create the Clay
@@ -44,6 +44,8 @@ function createDBIfNotExists() {
  * @returns {Promise}
  */
 function connect() {
+  log('debug', `Connecting to Postgres at ${POSTGRES_HOST}:${POSTGRES_PORT}`);
+
   knex = knexLib({
     client: 'pg',
     connection: {

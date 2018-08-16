@@ -5,6 +5,7 @@ const bluebird = require('bluebird'),
   { REDIS_URL, REDIS_HASH } = require('../services/constants'),
   { isPublished, isUri, isUser } = require('clayutils'),
   { notFoundError, logGenericError } = require('../services/errors');
+var log = require('../services/log').setup({ file: __filename });
 
 /**
  * Connect to Redis and store the client
@@ -18,6 +19,8 @@ function createClient(testRedisUrl) {
   if (!redisUrl) {
     return bluebird.reject(new Error('No Redis URL set'));
   }
+
+  log('debug', `Connecting to Redis at ${redisUrl}`);
 
   return new bluebird(resolve => {
     module.exports.client = redis.createClient(redisUrl);
