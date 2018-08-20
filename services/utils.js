@@ -50,9 +50,9 @@ function findSchemaAndTable(key) {
  * @return {Object}
  */
 function wrapInObject(key, _value) {
-  if (!isList(key) && !isUri(key)) return _value;
+  if (isList(key)) return { _value };
 
-  return { _value };
+  return _value;
 }
 
 /**
@@ -65,9 +65,9 @@ function wrapInObject(key, _value) {
  * @return {String}
  */
 function wrapJSONStringInObject(key, _value) {
-  if (!isList(key) && !isUri(key)) return _value;
+  if (!isList(key)) return `{"_value":"${_value}"}`;
 
-  return `{"_value":"${_value}"}`;
+  return _value;
 }
 
 module.exports.findSchemaAndTable = findSchemaAndTable;
