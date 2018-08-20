@@ -2,7 +2,7 @@
 
 const { DATA_STRUCTURES } = require('./constants'),
   { getComponentName, getLayoutName } = require('clayutils'),
-  { isList, isUri } = require('clayutils');
+  { isList } = require('clayutils');
 
 /**
  * Try to parse the stringified object.
