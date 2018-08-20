@@ -65,7 +65,7 @@ function wrapInObject(key, _value) {
  * @return {String}
  */
 function wrapJSONStringInObject(key, _value) {
-  if (!isList(key)) return `{"_value":"${_value}"}`;
+  if (isList(key)) return `{"_value":"${_value}"}`;
 
   return _value;
 }
