@@ -30,7 +30,7 @@ function createDBIfNotExists() {
   });
 
   // https://github.com/clay/amphora-storage-postgres/pull/7/files/16d3429767943a593ad9667b0d471fefc15088d3#diff-6a1e11a6146d3a5a01f955a44a2ac07a
-  return tmpClient.raw(`CREATE DATABASE ${POSTGRES_DB}`)
+  return tmpClient.raw('CREATE DATABASE ??', [POSTGRES_DB])
     .then(() => tmpClient.destroy())
     .then(connect);
 }
