@@ -23,7 +23,8 @@ describe('postgres/client', () => {
       return client.createDBIfNotExists().then(() => {
         expect(knex.mock.calls.length).toBe(2);
         expect(raw.mock.calls.length).toBe(1);
-        expect(raw.mock.calls[0][0]).toBe(`CREATE DATABASE ${POSTGRES_DB}`);
+        expect(raw.mock.calls[0][0]).toBe('CREATE DATABASE ??');
+        expect(raw.mock.calls[0][1]).toEqual([POSTGRES_DB]);
         expect(destroy.mock.calls.length).toBe(1);
         expect(table.mock.calls.length).toBe(1);
         expect(table.mock.calls[0][0]).toBe('information_schema.tables');
