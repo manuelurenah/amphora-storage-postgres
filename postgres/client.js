@@ -5,6 +5,7 @@ const { POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_PORT, POSTGRES
   { parseOrNot, wrapInObject } = require('../services/utils'),
   { findSchemaAndTable, wrapJSONStringInObject } = require('../services/utils'),
   knexLib = require('knex'),
+  { isList } = require('clayutils'),
   TransformStream = require('../services/list-transform-stream'),
   META_PUT_PATCH_FN = patch('meta');
 var knex, log = require('../services/log').setup({ file: __filename });
@@ -65,6 +66,9 @@ function connect() {
 function pullValFromRows(key, prop) {
   return (resp) => {
     if (!resp.length) return Promise.reject(notFoundError(key));
+
+    // if the value is a list wrapped in an object, return the list
+    if (isList(key)) return parseOrNot(resp[0][prop])._value;
 
     return resp[0][prop];
   };
