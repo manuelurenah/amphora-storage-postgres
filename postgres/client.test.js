@@ -68,6 +68,19 @@ describe('postgres/client', () => {
 
       return partialFunction(response).catch(error => expect(error.key).toMatch(key));
     });
+
+    test('unwraps wrapped data if the value is a list', () => {
+      const key = 'nymag.com/_lists/authors',
+        response = [{
+          id: 'id123',
+          data: {
+            _value: [ { name: 'Author One' } ]
+          }
+        }],
+        partialFunction = client.pullValFromRows(key, 'data');
+
+      expect(partialFunction(response)).toEqual([{ name: 'Author One' }]);
+    });
   });
 
   describe.each([
