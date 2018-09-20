@@ -104,7 +104,7 @@ function get(key) {
  *
  * @param {String} column
  * @param {Object|String} value
- * @param [Object] obj={}
+ * @param {Object} obj
  * @returns {Object}
  */
 function columnToValueMap(column, value, obj = {}) {
