@@ -100,9 +100,11 @@ function get(key) {
 /**
  * columnToValueMap
  *
+ * creates or adds to a map of column name -> value to be used in PUTs
+ *
  * @param {String} column
  * @param {Object|String} value
- * @param {[Object]} obj={}
+ * @param [Object] obj={}
  * @returns {Object}
  */
 function columnToValueMap(column, value, obj = {}) {
@@ -120,8 +122,9 @@ function columnToValueMap(column, value, obj = {}) {
  */
 function put(key, value) {
   const { schema, table } = findSchemaAndTable(key),
-    map = columnToValueMap('id', key);
+    map = columnToValueMap('id', key); // create the value map
 
+  // add data to the map
   columnToValueMap('data', wrapInObject(key, parseOrNot(value)), map);
 
   let url;
@@ -129,6 +132,7 @@ function put(key, value) {
   if (isUri(key)) {
     url = decode(key.split('/_uris/').pop());
 
+    // add url column to map if we're PUTting a uri
     columnToValueMap('url', url, map);
   }
 
@@ -205,6 +209,7 @@ function batch(ops) {
 
     columnToValueMap('data', wrapJSONStringInObject(key, value), map);
 
+    // add url column to map if putting a uri
     if (isUri(key)) {
       url = decode(key.split('/_uris/').pop());
 
@@ -263,6 +268,7 @@ function putMeta(key, value) {
   const { schema, table } = findSchemaAndTable(key),
     map = columnToValueMap('id', key);
 
+  // add meta column to map
   columnToValueMap('meta', parseOrNot(value), map);
 
   return onConflictPut(map, schema, table).then(() => map.meta);
