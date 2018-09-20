@@ -97,6 +97,14 @@ function get(key) {
     .then(pullValFromRows(key, dataProp));
 }
 
+/**
+ * columnToValueMap
+ *
+ * @param {String} column
+ * @param {Object|String} value
+ * @param {[Object]} obj={}
+ * @returns {Object}
+ */
 function columnToValueMap(column, value, obj = {}) {
   obj[column] = value;
 
@@ -203,7 +211,7 @@ function batch(ops) {
       columnToValueMap('url', url, map);
     }
 
-    commands.push(onConflictPut(map, schema, table).then(() => map.key));
+    commands.push(onConflictPut(map, schema, table).then(() => map.data));
   }
 
   return Promise.all(commands);

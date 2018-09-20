@@ -3,7 +3,8 @@
 const client = require('./client'),
   knex = require('knex'),
   TransformStream = require('../services/list-transform-stream'),
-  { POSTGRES_DB } = require('../services/constants');
+  { POSTGRES_DB } = require('../services/constants'),
+  { decode } = require('../services/utils');
 
 jest.mock('knex');
 jest.mock('../services/list-transform-stream');
@@ -655,17 +656,11 @@ describe('postgres/client', () => {
         ops = [
           {
             key: 'nymag.com/_uris/someinstance',
-            value: {
-              someText: '',
-              someOtherText: ''
-            }
+            value: 'nymag.com/_pages/someinstance'
           },
           {
             key: 'nymag.com/_uris/someotherinstance',
-            value: {
-              someText: '',
-              someOtherText: ''
-            }
+            value: 'nymag.com/_pages/someotherinstance'
           }
         ];
 
@@ -681,7 +676,7 @@ describe('postgres/client', () => {
 
         for (let index = 0; index < results.length; index++) {
           expect(table.mock.calls[index][0]).toBe('uris');
-          expect(insert.mock.calls[index][0]).toEqual({ id: ops[index].key, data: results[index] });
+          expect(insert.mock.calls[index][0]).toEqual({ id: ops[index].key, data: results[index], url: decode(ops[index].key.split('/_uris/').pop()) });
           expect(raw.mock.calls[index][0]).toBe('? ON CONFLICT (id) DO ? returning *');
           expect(raw.mock.calls[index][1]).toEqual(['insert sql', 'update sql']);
         }
