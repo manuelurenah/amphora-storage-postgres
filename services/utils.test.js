@@ -1,6 +1,6 @@
 'use strict';
 
-const { parseOrNot, wrapInObject, wrapJSONStringInObject, findSchemaAndTable } = require('./utils');
+const { parseOrNot, wrapInObject, wrapJSONStringInObject, findSchemaAndTable, decode } = require('./utils');
 
 describe('services/utils', () => {
   const testObj = { foo: true, bar: false },
@@ -13,6 +13,16 @@ describe('services/utils', () => {
 
     test('it does not error when trying to parse a non-JSON value', () => {
       expect(parseOrNot('foobar')).toStrictEqual('foobar');
+    });
+  });
+
+  describe('decode', () => {
+    test('base64 decodes an encoded string', () => {
+      expect(decode('aHR0cDovL3NpdGUuY29tL3NvbWUtY29vbC11cmw=')).toStrictEqual('http://site.com/some-cool-url');
+    });
+
+    test('returns arg unchanged if not a string', () => {
+      expect(decode(2)).toBe(2);
     });
   });
 

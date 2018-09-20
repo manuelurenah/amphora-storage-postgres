@@ -3,7 +3,8 @@
 const client = require('./client'),
   knex = require('knex'),
   TransformStream = require('../services/list-transform-stream'),
-  { POSTGRES_DB } = require('../services/constants');
+  { POSTGRES_DB } = require('../services/constants'),
+  { decode } = require('../services/utils');
 
 jest.mock('knex');
 jest.mock('../services/list-transform-stream');
@@ -297,24 +298,24 @@ describe('postgres/client', () => {
       };
 
     test('handle insertion conflicts when inserting having a schema in the sql statement', () => {
-      const key = 'nymag.com/_layouts/layout-column/someinstance',
+      const id = 'nymag.com/_layouts/layout-column/someinstance',
         data = {
           someText: '',
           someOtherText: ''
         },
-        dataProp = 'data',
         schema = 'someschema',
-        tableName = 'sometable';
+        tableName = 'sometable',
+        putObj = { id, data };
 
       client.setClient(knex);
 
-      return client.onConflictPut(key, data, dataProp, schema, tableName).then((data) => {
+      return client.onConflictPut(putObj, schema, tableName).then((data) => {
         expect(withSchema.mock.calls.length).toBe(1);
         expect(withSchema.mock.calls[0][0]).toBe(schema);
         expect(table.mock.calls.length).toBe(1);
         expect(table.mock.calls[0][0]).toBe(tableName);
         expect(insert.mock.calls.length).toBe(1);
-        expect(insert.mock.calls[0][0]).toEqual({ id: key, data });
+        expect(insert.mock.calls[0][0]).toEqual(putObj);
         expect(queryBuilder.mock.calls.length).toBe(1);
         expect(update.mock.calls.length).toBe(1);
         expect(raw.mock.calls.length).toBe(1);
@@ -325,22 +326,22 @@ describe('postgres/client', () => {
     });
 
     test('handle insertion conflicts when inserting without having a schema in the sql statement', () => {
-      const key = 'nymag.com/_layouts/layout-column/someinstance',
+      const id = 'nymag.com/_layouts/layout-column/someinstance',
         data = {
           someText: '',
           someOtherText: ''
         },
-        dataProp = 'data',
-        tableName = 'sometable';
+        tableName = 'sometable',
+        putObj = { id, data };
 
       client.setClient(knex);
 
-      return client.onConflictPut(key, data, dataProp, null, tableName).then((data) => {
+      return client.onConflictPut(putObj, null, tableName).then((data) => {
         expect(withSchema.mock.calls.length).toBe(0);
         expect(table.mock.calls.length).toBe(1);
         expect(table.mock.calls[0][0]).toBe(tableName);
         expect(insert.mock.calls.length).toBe(1);
-        expect(insert.mock.calls[0][0]).toEqual({ id: key, data });
+        expect(insert.mock.calls[0][0]).toEqual(putObj);
         expect(queryBuilder.mock.calls.length).toBe(1);
         expect(update.mock.calls.length).toBe(1);
         expect(raw.mock.calls.length).toBe(1);
@@ -527,6 +528,26 @@ describe('postgres/client', () => {
         expect(data).toEqual(data);
       });
     });
+
+    test('inserts a row with a column for url if passed a uri', () => {
+      const key = 'nymag.com/_uris/aHR0cDovL3NpdGUuY29tL3NvbWUtY29vbC11cmw=',
+        tableName = 'uris';
+
+      client.setClient(knex);
+
+      return client.put(key, data).then((data) => {
+        expect(table.mock.calls.length).toBe(1);
+        expect(table.mock.calls[0][0]).toBe(tableName);
+        expect(insert.mock.calls.length).toBe(1);
+        expect(insert.mock.calls[0][0]).toEqual({ id: key, data, url: 'http://site.com/some-cool-url' });
+        expect(queryBuilder.mock.calls.length).toBe(1);
+        expect(update.mock.calls.length).toBe(1);
+        expect(raw.mock.calls.length).toBe(1);
+        expect(raw.mock.calls[0][0]).toBe('? ON CONFLICT (id) DO ? returning *');
+        expect(raw.mock.calls[0][1]).toEqual(['insert sql', 'update sql']);
+        expect(data).toEqual(data);
+      });
+    });
   });
 
   describe('putMeta', () => {
@@ -635,17 +656,11 @@ describe('postgres/client', () => {
         ops = [
           {
             key: 'nymag.com/_uris/someinstance',
-            value: {
-              someText: '',
-              someOtherText: ''
-            }
+            value: 'nymag.com/_pages/someinstance'
           },
           {
             key: 'nymag.com/_uris/someotherinstance',
-            value: {
-              someText: '',
-              someOtherText: ''
-            }
+            value: 'nymag.com/_pages/someotherinstance'
           }
         ];
 
@@ -661,7 +676,7 @@ describe('postgres/client', () => {
 
         for (let index = 0; index < results.length; index++) {
           expect(table.mock.calls[index][0]).toBe('uris');
-          expect(insert.mock.calls[index][0]).toEqual({ id: ops[index].key, data: results[index] });
+          expect(insert.mock.calls[index][0]).toEqual({ id: ops[index].key, data: results[index], url: decode(ops[index].key.split('/_uris/').pop()) });
           expect(raw.mock.calls[index][0]).toBe('? ON CONFLICT (id) DO ? returning *');
           expect(raw.mock.calls[index][1]).toEqual(['insert sql', 'update sql']);
         }

@@ -10,7 +10,7 @@
 First install the module:
 
 ```
-$ npm install -S amphora-postgres-redis
+$ npm install -S amphora-storage-postgres
 ```
 
 Then pass the module into Amphora as the value for the `storage` property.
@@ -18,7 +18,7 @@ Then pass the module into Amphora as the value for the `storage` property.
 ```javascript
 amphora({
   ...
-  storage: require('amphora-postgres-redis')
+  storage: require('amphora-storage-postgres')
   ...
 })
 ```
