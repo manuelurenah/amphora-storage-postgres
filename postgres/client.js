@@ -124,6 +124,7 @@ function put(key, value) {
     columnToValueMap('url', url, map);
   }
 
+
   return onConflictPut(map, schema, table)
     .then(() => map.data);
 }
@@ -187,14 +188,20 @@ function del(key) {
  * @return {[type]}     [description]
  */
 function batch(ops) {
-  var commands = [];
+  var commands = [], url;
 
   for (let i = 0; i < ops.length; i++) {
     let { key, value } = ops[i],
       { table, schema } = findSchemaAndTable(key),
       map = columnToValueMap('id', key);
 
-    columnToValueMap('data', wrapJSONStringInObject(key, value));
+    columnToValueMap('data', wrapJSONStringInObject(key, value), map);
+
+    if (isUri(key)) {
+      url = decode(key.split('/_uris/').pop());
+
+      columnToValueMap('url', url, map);
+    }
 
     commands.push(onConflictPut(map, schema, table).then(() => map.key));
   }
