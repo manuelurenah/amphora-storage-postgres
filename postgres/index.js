@@ -31,7 +31,7 @@ function createTables() {
   return bluebird.all(getComponents().map(component => client.createTable(`components.${component}`)))
     .then(() => bluebird.all(getLayouts().map(layout => client.createTableWithMeta(`layouts.${layout}`))))
     .then(() => client.createTableWithMeta('pages'))
-    .then(() => client.raw('CREATE TABLE IF NOT EXISTS ?? ( id TEXT PRIMARY KEY NOT NULL, data TEXT NOT NULL, url TEXT NOT NULL );', ['uris']))
+    .then(() => client.raw('CREATE TABLE IF NOT EXISTS ?? ( id TEXT PRIMARY KEY NOT NULL, data TEXT NOT NULL, url TEXT );', ['uris']))
     .then(() => createRemainingTables());
 }
 
