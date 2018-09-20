@@ -297,24 +297,24 @@ describe('postgres/client', () => {
       };
 
     test('handle insertion conflicts when inserting having a schema in the sql statement', () => {
-      const key = 'nymag.com/_layouts/layout-column/someinstance',
+      const id = 'nymag.com/_layouts/layout-column/someinstance',
         data = {
           someText: '',
           someOtherText: ''
         },
-        dataProp = 'data',
         schema = 'someschema',
-        tableName = 'sometable';
+        tableName = 'sometable',
+        putObj = { id, data };
 
       client.setClient(knex);
 
-      return client.onConflictPut(key, data, dataProp, schema, tableName).then((data) => {
+      return client.onConflictPut(putObj, schema, tableName).then((data) => {
         expect(withSchema.mock.calls.length).toBe(1);
         expect(withSchema.mock.calls[0][0]).toBe(schema);
         expect(table.mock.calls.length).toBe(1);
         expect(table.mock.calls[0][0]).toBe(tableName);
         expect(insert.mock.calls.length).toBe(1);
-        expect(insert.mock.calls[0][0]).toEqual({ id: key, data });
+        expect(insert.mock.calls[0][0]).toEqual(putObj);
         expect(queryBuilder.mock.calls.length).toBe(1);
         expect(update.mock.calls.length).toBe(1);
         expect(raw.mock.calls.length).toBe(1);
@@ -325,22 +325,22 @@ describe('postgres/client', () => {
     });
 
     test('handle insertion conflicts when inserting without having a schema in the sql statement', () => {
-      const key = 'nymag.com/_layouts/layout-column/someinstance',
+      const id = 'nymag.com/_layouts/layout-column/someinstance',
         data = {
           someText: '',
           someOtherText: ''
         },
-        dataProp = 'data',
-        tableName = 'sometable';
+        tableName = 'sometable',
+        putObj = { id, data };
 
       client.setClient(knex);
 
-      return client.onConflictPut(key, data, dataProp, null, tableName).then((data) => {
+      return client.onConflictPut(putObj, null, tableName).then((data) => {
         expect(withSchema.mock.calls.length).toBe(0);
         expect(table.mock.calls.length).toBe(1);
         expect(table.mock.calls[0][0]).toBe(tableName);
         expect(insert.mock.calls.length).toBe(1);
-        expect(insert.mock.calls[0][0]).toEqual({ id: key, data });
+        expect(insert.mock.calls[0][0]).toEqual(putObj);
         expect(queryBuilder.mock.calls.length).toBe(1);
         expect(update.mock.calls.length).toBe(1);
         expect(raw.mock.calls.length).toBe(1);
@@ -519,6 +519,26 @@ describe('postgres/client', () => {
         expect(table.mock.calls[0][0]).toBe(tableName);
         expect(insert.mock.calls.length).toBe(1);
         expect(insert.mock.calls[0][0]).toEqual({ id: key, data });
+        expect(queryBuilder.mock.calls.length).toBe(1);
+        expect(update.mock.calls.length).toBe(1);
+        expect(raw.mock.calls.length).toBe(1);
+        expect(raw.mock.calls[0][0]).toBe('? ON CONFLICT (id) DO ? returning *');
+        expect(raw.mock.calls[0][1]).toEqual(['insert sql', 'update sql']);
+        expect(data).toEqual(data);
+      });
+    });
+
+    test('inserts a row with a column for url if passed a uri', () => {
+      const key = 'nymag.com/_uris/aHR0cDovL3NpdGUuY29tL3NvbWUtY29vbC11cmw=',
+        tableName = 'uris';
+
+      client.setClient(knex);
+
+      return client.put(key, data).then((data) => {
+        expect(table.mock.calls.length).toBe(1);
+        expect(table.mock.calls[0][0]).toBe(tableName);
+        expect(insert.mock.calls.length).toBe(1);
+        expect(insert.mock.calls[0][0]).toEqual({ id: key, data, url: 'http://site.com/some-cool-url' });
         expect(queryBuilder.mock.calls.length).toBe(1);
         expect(update.mock.calls.length).toBe(1);
         expect(raw.mock.calls.length).toBe(1);

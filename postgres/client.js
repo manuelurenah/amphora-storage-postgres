@@ -2,10 +2,10 @@
 
 const { POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB } = require('../services/constants'),
   { notFoundError } = require('../services/errors'),
-  { parseOrNot, wrapInObject } = require('../services/utils'),
+  { parseOrNot, wrapInObject, decode } = require('../services/utils'),
   { findSchemaAndTable, wrapJSONStringInObject } = require('../services/utils'),
   knexLib = require('knex'),
-  { isList } = require('clayutils'),
+  { isList, isUri } = require('clayutils'),
   TransformStream = require('../services/list-transform-stream'),
   META_PUT_PATCH_FN = patch('meta');
 var knex, log = require('../services/log').setup({ file: __filename });
@@ -97,6 +97,12 @@ function get(key) {
     .then(pullValFromRows(key, dataProp));
 }
 
+function columnToValueMap(column, value, obj = {}) {
+  obj[column] = value;
+
+  return obj;
+}
+
 /**
  * Insert a row into the DB
  *
@@ -105,9 +111,21 @@ function get(key) {
  * @return {Promise}
  */
 function put(key, value) {
-  const { schema, table } = findSchemaAndTable(key);
+  const { schema, table } = findSchemaAndTable(key),
+    map = columnToValueMap('id', key);
 
-  return onConflictPut(key, wrapInObject(key,parseOrNot(value)), 'data', schema, table);
+  columnToValueMap('data', wrapInObject(key, parseOrNot(value)), map);
+
+  let url;
+
+  if (isUri(key)) {
+    url = decode(key.split('/_uris/').pop());
+
+    columnToValueMap('url', url, map);
+  }
+
+  return onConflictPut(map, schema, table)
+    .then(() => map.data);
 }
 
 /**
@@ -130,17 +148,13 @@ function patch(prop) {
  *
  * TODO: BETTER COMMENT https://github.com/clay/amphora-storage-postgres/pull/7/files/16d3429767943a593ad9667b0d471fefc15088d3#diff-6a1e11a6146d3a5a01f955a44a2ac07a
  *
- * @param {String} id
- * @param {Object|String} data
- * @param {String} dataProp
+ * @param {Object} putObj
  * @param {String} schema
  * @param {String} table
  * @returns {Promise}
  */
-function onConflictPut(id, data, dataProp, schema, table) {
-  var insert, update, putObj = { id };
-
-  putObj[dataProp] = data;
+function onConflictPut(putObj, schema, table) {
+  var insert, update;
 
   if (schema) {
     insert = knex.withSchema(schema).table(table).insert(putObj);
@@ -151,7 +165,7 @@ function onConflictPut(id, data, dataProp, schema, table) {
   update = knex.queryBuilder().update(putObj);
 
   return raw('? ON CONFLICT (id) DO ? returning *', [insert, update])
-    .then(() => data);
+    .then(() => putObj);
 }
 
 /**
@@ -177,9 +191,12 @@ function batch(ops) {
 
   for (let i = 0; i < ops.length; i++) {
     let { key, value } = ops[i],
-      { table, schema } = findSchemaAndTable(key);
+      { table, schema } = findSchemaAndTable(key),
+      map = columnToValueMap('id', key);
 
-    commands.push(onConflictPut(key, wrapJSONStringInObject(key, value), 'data', schema, table));
+    columnToValueMap('data', wrapJSONStringInObject(key, value));
+
+    commands.push(onConflictPut(map, schema, table).then(() => map.key));
   }
 
   return Promise.all(commands);
@@ -228,9 +245,12 @@ function getMeta(key) {
  * @return {Promise} [description]
  */
 function putMeta(key, value) {
-  const { schema, table } = findSchemaAndTable(key);
+  const { schema, table } = findSchemaAndTable(key),
+    map = columnToValueMap('id', key);
 
-  return onConflictPut(key, parseOrNot(value), 'meta', schema, table);
+  columnToValueMap('meta', parseOrNot(value), map);
+
+  return onConflictPut(map, schema, table).then(() => map.meta);
 }
 
 /**

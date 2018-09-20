@@ -70,7 +70,16 @@ function wrapJSONStringInObject(key, _value) {
   return _value;
 }
 
+function decode(string) {
+  if (typeof string !== 'string') {
+    return string;
+  }
+
+  return Buffer.from(string, 'base64').toString('utf8');
+}
+
 module.exports.findSchemaAndTable = findSchemaAndTable;
 module.exports.parseOrNot = parseOrNot;
 module.exports.wrapInObject = wrapInObject;
 module.exports.wrapJSONStringInObject = wrapJSONStringInObject;
+module.exports.decode = decode;
