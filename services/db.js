@@ -2,8 +2,7 @@
 
 var redis = require('../redis'),
   postgres = require('../postgres/client'),
-  { CACHE_ENABLED } = require('./constants'),
-  { isUri } = require('clayutils');
+  { CACHE_ENABLED } = require('./constants');
 
 /**
  * Write a single value to cache and db
