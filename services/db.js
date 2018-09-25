@@ -2,7 +2,8 @@
 
 var redis = require('../redis'),
   postgres = require('../postgres/client'),
-  { CACHE_ENABLED } = require('./constants');
+  { CACHE_ENABLED } = require('./constants'),
+  { isUri } = require('clayutils');
 
 /**
  * Write a single value to cache and db
@@ -35,8 +36,16 @@ function put(key, value, testCacheEnabled) {
  */
 function get(key) {
   return redis.get(key)
-    .then(JSON.parse) // Always parse on the way out to match Mongo
-    .catch(() => postgres.get(key));
+    .then(val => {
+      try {
+        return JSON.parse(val);
+      } catch (e) {
+        return val;
+      }
+    }) // Always parse on the way out to match Postgres
+    .catch(() => {
+      return postgres.get(key);
+    });
 }
 
 /**

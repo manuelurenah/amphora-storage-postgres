@@ -23,6 +23,16 @@ describe('services/db', () => {
       });
     });
 
+    test('returns uris properly from Redis', () => {
+      redis.get.mockResolvedValue('site.com/_uris/a');
+
+      return get(KEY).then(() => {
+        expect(redis.get.mock.calls.length).toBe(1);
+        expect(redis.get).toHaveBeenCalledWith(KEY);
+        expect(postgres.get.mock.calls.length).toBe(0);
+      });
+    });
+
     test('it does call Postgres client if Redis has the data', () => {
       redis.get.mockResolvedValue(Promise.reject());
 
