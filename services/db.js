@@ -35,13 +35,7 @@ function put(key, value, testCacheEnabled) {
  */
 function get(key) {
   return redis.get(key)
-    .then(val => {
-      try {
-        return JSON.parse(val);
-      } catch (e) {
-        return val;
-      }
-    }) // Always parse on the way out to match Postgres
+    .then(JSON.parse) // Always parse on the way out to match Postgres
     .catch(() => {
       return postgres.get(key);
     });
