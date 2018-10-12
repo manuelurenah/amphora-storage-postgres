@@ -57,7 +57,17 @@ function connect() {
       database: POSTGRES_DB,
       port: POSTGRES_PORT
     },
-    pool: { min: CONNECTION_POOL_MIN, max: CONNECTION_POOL_MAX }
+    pool: { min: CONNECTION_POOL_MIN, max: CONNECTION_POOL_MAX },
+    log: {
+      warn: (message) => {
+        const e = new Error(message);
+        log('warn', message, { stack: e.stack });
+      },
+      error: (message) => {
+        const e = new Error(message);
+        log('error', message, { stack: e.stack });
+      }
+    }
   });
 
   // TODO: improve error catch! https://github.com/clay/amphora-storage-postgres/pull/7/files/16d3429767943a593ad9667b0d471fefc15088d3#diff-6a1e11a6146d3a5a01f955a44a2ac07a
@@ -78,6 +88,11 @@ function pullValFromRows(key, prop) {
 
 function baseQuery(key) {
   const { schema, table } = findSchemaAndTable(key);
+
+  if (!table) {
+    const e = new Error(`Attempted to query for key ${key} without a table name`);
+    log('warn', e.message, { stack: e.stack });
+  }
 
   return schema
     ? knex(table).withSchema(schema)
