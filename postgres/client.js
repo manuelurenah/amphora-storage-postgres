@@ -61,10 +61,12 @@ function connect() {
     log: {
       warn: (message) => {
         const e = new Error(message);
+
         log('warn', message, { stack: e.stack });
       },
       error: (message) => {
         const e = new Error(message);
+
         log('error', message, { stack: e.stack });
       }
     }
@@ -88,9 +90,11 @@ function pullValFromRows(key, prop) {
 
 function baseQuery(key) {
   const { schema, table } = findSchemaAndTable(key);
+  let e;
 
   if (!table) {
-    const e = new Error(`Attempted to query for key ${key} without a table name`);
+    e = new Error(`Attempted to query for key ${key} without a table name`);
+
     log('warn', e.message, { stack: e.stack });
   }
 
