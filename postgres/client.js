@@ -57,19 +57,7 @@ function connect() {
       database: POSTGRES_DB,
       port: POSTGRES_PORT
     },
-    pool: { min: CONNECTION_POOL_MIN, max: CONNECTION_POOL_MAX },
-    log: {
-      warn: (message) => {
-        const e = new Error(message);
-
-        log('warn', message, { stack: e.stack });
-      },
-      error: (message) => {
-        const e = new Error(message);
-
-        log('error', message, { stack: e.stack });
-      }
-    }
+    pool: { min: CONNECTION_POOL_MIN, max: CONNECTION_POOL_MAX }
   });
 
   // TODO: improve error catch! https://github.com/clay/amphora-storage-postgres/pull/7/files/16d3429767943a593ad9667b0d471fefc15088d3#diff-6a1e11a6146d3a5a01f955a44a2ac07a
@@ -95,7 +83,7 @@ function baseQuery(key) {
   if (!table) {
     e = new Error(`Attempted to query for key ${key} without a table name`);
 
-    log('warn', e.message, { stack: e.stack });
+    log('warn', e.message, { stack: e.stack, action: 'postgres-base-query' });
   }
 
   return schema
@@ -366,4 +354,5 @@ module.exports.pullValFromRows = pullValFromRows;
 module.exports.createDBIfNotExists = createDBIfNotExists;
 module.exports.baseQuery = baseQuery;
 module.exports.setClient = mock => knex = mock;
+module.exports.setLog = mock => log = mock;
 module.exports.onConflictPut = onConflictPut;

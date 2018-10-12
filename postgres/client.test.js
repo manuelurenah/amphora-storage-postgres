@@ -86,7 +86,8 @@ describe('postgres/client', () => {
 
   describe.each([
     ['nymag.com/_layouts/layout-column/someinstance', 1, 1, 'layout-column'],
-    ['nymag.com/_pages/bnltYWcuY29tL2F1dGhvci9BYnJhaGFtJTIwUmllc21hbi8', 1, 0, 'pages']
+    ['nymag.com/_pages/bnltYWcuY29tL2F1dGhvci9BYnJhaGFtJTIwUmllc21hbi8', 1, 0, 'pages'],
+    ['nymag.com/_nontable', 1, 0, undefined]
   ])
   ('baseQuery', (key, knexCalls, schemaCalls, knexParam) => {
     test('creates a base query with/without schema from a key', () => {
@@ -99,6 +100,23 @@ describe('postgres/client', () => {
       expect(knex.mock.calls.length).toBe(knexCalls);
       expect(knex.mock.calls[0][0]).toBe(knexParam);
       expect(withSchema.mock.calls.length).toBe(schemaCalls);
+    });
+
+    test('logs a warning if key doesn\'t correspond to an existing table', () => {
+      const withSchema = jest.fn(),
+        knex = jest.fn(() => ({ withSchema })),
+        mockLog = jest.fn();
+
+      client.setLog(mockLog);
+      client.setClient(knex);
+      client.baseQuery(key);
+
+      if (key === 'nymag.com/_nontable') {
+        expect(mockLog.mock.calls.length).toBe(1);
+        expect(mockLog.mock.calls[0][0]).toBe('warn');
+      } else {
+        expect(mockLog.mock.calls.length).toBe(0);
+      }
     });
   });
 
@@ -434,7 +452,7 @@ describe('postgres/client', () => {
       TransformStream.mockReturnValueOnce(mockedTransform);
 
       const options = {
-          prefix: 'nymag.com/_uri',
+          prefix: 'nymag.com/_uris',
           values: true,
           keys: true
         },
@@ -454,7 +472,7 @@ describe('postgres/client', () => {
       TransformStream.mockReturnValueOnce(mockedTransform);
 
       const options = {
-          prefix: 'nymag.com/_uri',
+          prefix: 'nymag.com/_uris',
           values: false,
           keys: false
         },
