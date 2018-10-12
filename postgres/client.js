@@ -78,10 +78,9 @@ function pullValFromRows(key, prop) {
 
 function baseQuery(key) {
   const { schema, table } = findSchemaAndTable(key);
-  let e;
 
   if (!table) {
-    e = new Error(`Attempted to query for key ${key} without a table name`);
+    const e = new Error(`Attempted to query for key ${key} without a table name`);
 
     log('warn', e.message, { stack: e.stack, action: 'postgres-base-query' });
   }
