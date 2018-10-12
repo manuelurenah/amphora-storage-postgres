@@ -79,6 +79,12 @@ function pullValFromRows(key, prop) {
 function baseQuery(key) {
   const { schema, table } = findSchemaAndTable(key);
 
+  if (!table) {
+    const e = new Error(`Attempted to query for key ${key} without a table name`);
+
+    log('warn', e.message, { stack: e.stack, action: 'postgres-base-query' });
+  }
+
   return schema
     ? knex(table).withSchema(schema)
     : knex(table);
@@ -347,4 +353,5 @@ module.exports.pullValFromRows = pullValFromRows;
 module.exports.createDBIfNotExists = createDBIfNotExists;
 module.exports.baseQuery = baseQuery;
 module.exports.setClient = mock => knex = mock;
+module.exports.setLog = mock => log = mock;
 module.exports.onConflictPut = onConflictPut;
