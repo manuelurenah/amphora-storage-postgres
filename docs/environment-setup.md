@@ -2,14 +2,14 @@
 
 To define where Postgres and Redis clients will connect to you can define the following environment variables:
 
-- [`CLAY_STORAGE_POSTGRES_USER`](#claystoragepostgresuser)
-- [`CLAY_STORAGE_POSTGRES_PASSWORD`](#claystoragepostgrespassword)
-- [`CLAY_STORAGE_POSTGRES_HOST`](#claystoragepostgreshost)
-- [`CLAY_STORAGE_POSTGRES_PORT`](#claystoragepostgresport)
-- [`CLAY_STORAGE_POSTGRES_DB`](#claystoragepostgresdb)
-- [`CLAY_STORAGE_POSTGRES_CACHE_ENABLED`](#claystoragepostgrescacheenabled)
-- [`CLAY_STORAGE_POSTGRES_CACHE_HASH`](#claystoragepostgrescachehash)
-- [`CLAY_STORAGE_POSTGRES_CACHE_HOST`](#claystoragepostgrescachehost)
+- [`CLAY_STORAGE_POSTGRES_USER`](#clay_storage_postgres_user)
+- [`CLAY_STORAGE_POSTGRES_PASSWORD`](#clay_storage_postgres_password)
+- [`CLAY_STORAGE_POSTGRES_HOST`](#clay_storage_postgres_host)
+- [`CLAY_STORAGE_POSTGRES_PORT`](#clay_storage_postgres_port)
+- [`CLAY_STORAGE_POSTGRES_DB`](#clay_storage_postgres_db)
+- [`CLAY_STORAGE_POSTGRES_CACHE_ENABLED`](#clay_storage_postgres_cache_enabled)
+- [`CLAY_STORAGE_POSTGRES_CACHE_HASH`](#clay_storage_postgres_cache_hash)
+- [`CLAY_STORAGE_POSTGRES_CACHE_HOST`](#clay_storage_postgres_cache_host)
 
 ---
 ## Postgres
