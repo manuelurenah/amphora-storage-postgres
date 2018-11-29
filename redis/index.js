@@ -1,7 +1,7 @@
 'use strict';
 
 const bluebird = require('bluebird'),
-  redis = bluebird.promisifyAll(require('redis')),
+  Redis = require('ioredis'),
   { REDIS_URL, REDIS_HASH } = require('../services/constants'),
   { isPublished, isUri, isUser } = require('clayutils'),
   { notFoundError, logGenericError } = require('../services/errors');
@@ -23,7 +23,7 @@ function createClient(testRedisUrl) {
   log('debug', `Connecting to Redis at ${redisUrl}`);
 
   return new bluebird(resolve => {
-    module.exports.client = redis.createClient(redisUrl);
+    module.exports.client = bluebird.promisifyAll(new Redis(redisUrl));
     module.exports.client.on('error', logGenericError(__filename));
 
     resolve({ server: redisUrl });
