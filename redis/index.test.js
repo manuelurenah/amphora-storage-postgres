@@ -1,7 +1,7 @@
 'use strict';
 
 var { createClient, get, put, batch, del, stubClient } = require('./index'),
-  redis = require('redis'),
+  redis = require('ioredis'),
   FAKE_DATA = { foo: true, bar: true },
   FAKE_OPS = [
     {
