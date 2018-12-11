@@ -28,6 +28,6 @@
   "devDependencies": {
     "coveralls": "^3.0.1",
     "eslint": "^5.0.1",
-    "jest": "^23.2.0"
+    "jest": "^23.6.0"
   }
 }
