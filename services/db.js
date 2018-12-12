@@ -38,7 +38,7 @@ function get(key) {
   return redis.get(key)
     .then(data => {
       if (isUri(key)) return data;
-      else return JSON.parse(data); // Parse non-uri data to match Postgres
+      return JSON.parse(data); // Parse non-uri data to match Postgres
     })
     .catch(() => postgres.get(key));
 }
