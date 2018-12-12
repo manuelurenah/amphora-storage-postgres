@@ -40,10 +40,7 @@ function get(key) {
       if (isUri(key)) return data;
       else return JSON.parse(data); // Parse non-uri data to match Postgres
     })
-    .catch(() => {
-      console.log(key)
-      return postgres.get(key);
-    });
+    .catch(() => postgres.get(key));
 }
 
 /**
