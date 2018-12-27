@@ -52,7 +52,7 @@ function setup(testPostgresHost) {
     .then(() => client.createSchema('components'))
     .then(() => client.createSchema('layouts'))
     .then(createTables)
-    .then(() => ({ server: `${postgresHost}${POSTGRES_PORT}:${POSTGRES_PORT}` }));
+    .then(() => ({ server: `${postgresHost}:${POSTGRES_PORT}` }));
 }
 
 module.exports.setup = setup;
