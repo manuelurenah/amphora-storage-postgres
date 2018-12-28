@@ -23,6 +23,20 @@ describe('services/db', () => {
       });
     });
 
+    test('it does does not try to parse a uri response', () => {
+      const uri = 'foo.com/_uris/bar',
+        page = 'foo.com/_pages/bar';
+
+      redis.get.mockResolvedValue(page);
+
+      return get(uri).then(resp => {
+        expect(redis.get.mock.calls.length).toBe(1);
+        expect(redis.get).toHaveBeenCalledWith(uri);
+        expect(resp).toBe(page);
+        expect(postgres.get.mock.calls.length).toBe(0);
+      });
+    });
+
     test('it does call Postgres client if Redis has the data', () => {
       redis.get.mockResolvedValue(Promise.reject());
 

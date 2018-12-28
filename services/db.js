@@ -2,6 +2,7 @@
 
 var redis = require('../redis'),
   postgres = require('../postgres/client'),
+  { isUri } = require('clayutils'),
   { CACHE_ENABLED } = require('./constants');
 
 /**
@@ -35,10 +36,11 @@ function put(key, value, testCacheEnabled) {
  */
 function get(key) {
   return redis.get(key)
-    .then(JSON.parse) // Always parse on the way out to match Postgres
-    .catch(() => {
-      return postgres.get(key);
-    });
+    .then(data => {
+      if (isUri(key)) return data;
+      return JSON.parse(data); // Parse non-uri data to match Postgres
+    })
+    .catch(() => postgres.get(key));
 }
 
 /**
