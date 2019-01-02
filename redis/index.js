@@ -28,7 +28,6 @@ function createClusterClient(redisUrl) {
       return { host, port}; // Return the formatted object
     });
 
-
   return new bluebird(resolve => {
     module.exports.client = new Redis.Cluster(endpoints);
     module.exports.client.on('error', logGenericError(__filename));
@@ -93,7 +92,7 @@ function shouldProcess(key) {
 function put(key, value) {
   if (!shouldProcess(key)) return bluebird.resolve();
 
-  return module.exports.client.hsetAsync(REDIS_HASH, key, value);
+  return module.exports.client.hset(REDIS_HASH, key, value);
 }
 
 /**
@@ -107,7 +106,9 @@ function get(key) {
     return bluebird.reject(notFoundError(key));
   }
 
-  return module.exports.client.hgetAsync(REDIS_HASH, key)
+  console.log(key)
+  console.log(module.exports.client.hget(REDIS_HASH, key))
+  return module.exports.client.hget(REDIS_HASH, key)
     .then(data => data || bluebird.reject(notFoundError(key)));
 }
 
@@ -136,7 +137,7 @@ function batch(ops) {
     return bluebird.resolve();
   }
 
-  return module.exports.client.hmsetAsync(REDIS_HASH, batch);
+  return module.exports.client.hmset(REDIS_HASH, batch);
 }
 
 /**
@@ -147,7 +148,7 @@ function batch(ops) {
 function del(key) {
   if (!shouldProcess(key) || !module.exports.client) return bluebird.resolve();
 
-  return module.exports.client.hdelAsync(REDIS_HASH, key);
+  return module.exports.client.hdel(REDIS_HASH, key);
 }
 
 module.exports.client = null;
