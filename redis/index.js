@@ -8,7 +8,7 @@ const bluebird = require('bluebird'),
 var log = require('../services/log').setup({ file: __filename });
 
 // Promisify all ioredis methods
-// Redis.Promise = bluebird;
+Redis.Promise = bluebird;
 
 /**
  * Creates a  client connecting to a
