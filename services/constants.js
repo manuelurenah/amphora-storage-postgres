@@ -10,9 +10,10 @@ module.exports.CONNECTION_POOL_MIN = parseInt(process.env.CLAY_STORAGE_CONNECTIO
 module.exports.CONNECTION_POOL_MAX = parseInt(process.env.CLAY_STORAGE_CONNECTION_POOL_MAX, 10) || 10;
 
 // Redis
-module.exports.CACHE_ENABLED     = process.env.CLAY_STORAGE_POSTGRES_CACHE_ENABLED     || false;
-module.exports.REDIS_HASH        = process.env.CLAY_STORAGE_POSTGRES_CACHE_HASH        || 'clay';
-module.exports.REDIS_URL         = process.env.CLAY_STORAGE_POSTGRES_CACHE_HOST;
+module.exports.CACHE_ENABLED       = process.env.CLAY_STORAGE_POSTGRES_CACHE_ENABLED       || false;
+module.exports.REDIS_HASH          = process.env.CLAY_STORAGE_POSTGRES_CACHE_HASH          || 'clay';
+module.exports.REDIS_URL           = process.env.CLAY_STORAGE_POSTGRES_CACHE_HOST          || false;
+module.exports.REDIS_CLUSTER_HOSTS = process.env.CLAY_STORAGE_POSTGRES_CACHE_CLUSTER_HOSTS || false;
 
 // Application code
 module.exports.DATA_STRUCTURES   = ['components', 'layouts', 'pages', 'uris', 'lists', 'users'];

@@ -2,20 +2,49 @@
 
 const bluebird = require('bluebird'),
   Redis = require('ioredis'),
-  { REDIS_URL, REDIS_HASH } = require('../services/constants'),
+  { REDIS_URL, REDIS_HASH, REDIS_CLUSTER_HOSTS } = require('../services/constants'),
   { isPublished, isUri, isUser } = require('clayutils'),
   { notFoundError, logGenericError } = require('../services/errors');
 var log = require('../services/log').setup({ file: __filename });
 
-/**
- * Connect to Redis and store the client
- *
- * @param {String} testRedisUrl, used for testing only
- * @return {Promise}
- */
-function createClient(testRedisUrl) {
-  const redisUrl = testRedisUrl || REDIS_URL;
+// Promisify all ioredis methods
+// Redis.Promise = bluebird;
 
+/**
+ * Creates a  client connecting to a
+ * Redis cluster.
+ *
+ * @param {String} redisUrl
+ * @returns {Promise}
+ */
+function createClusterClient(redisUrl) {
+  // Generate the endpoints array from the cluster env var
+  const endpoints = redisUrl.replace(/redis\:\/\//gi, '').split(',') // Split on commas
+    .map(node => node.trim()) // Make sure we account for spaces in each declaration
+    .map(node => {
+      var [host, port = 6379] = node.split(':'); // Split between host and port, default port to 6379 if just host
+
+      if (typeof port === 'string') port = parseInt(port, 10); // Parse the sring for ports
+      return { host, port}; // Return the formatted object
+    });
+
+
+  return new bluebird(resolve => {
+    module.exports.client = new Redis.Cluster(endpoints);
+    module.exports.client.on('error', logGenericError(__filename));
+
+    resolve({ server: redisUrl });
+  });
+}
+
+/**
+ * Creates a  client connecting to a single
+ * Redis instance.
+ *
+ * @param {String} redisUrl
+ * @returns {Promise}
+ */
+function createBasicClient(redisUrl) {
   if (!redisUrl) {
     return bluebird.reject(new Error('No Redis URL set'));
   }
@@ -23,11 +52,25 @@ function createClient(testRedisUrl) {
   log('debug', `Connecting to Redis at ${redisUrl}`);
 
   return new bluebird(resolve => {
-    module.exports.client = bluebird.promisifyAll(new Redis(redisUrl));
+    module.exports.client = new Redis(redisUrl);
     module.exports.client.on('error', logGenericError(__filename));
 
     resolve({ server: redisUrl });
   });
+}
+
+/**
+ * Either connect to the Redis instance or
+ * a Redis Cluster
+ *
+ * @param {String} testRedisUrl used for testing only
+ * @param {String} testClusterString used for testing only
+ * @return {Promise}
+ */
+function createClient(testRedisUrl, testClusterString) {
+  if (REDIS_URL || testRedisUrl) return createBasicClient(REDIS_URL || testRedisUrl);
+  else if (REDIS_CLUSTER_HOSTS || testClusterString) return createClusterClient(REDIS_CLUSTER_HOSTS || testClusterString);
+  else return bluebird.reject(new Error('No redis host or cluster host(s) defined'));
 }
 
 /**
