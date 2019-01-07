@@ -133,22 +133,31 @@ describe('redis', () => {
     });
 
     test('creates a Redis cluster client', () => {
+      const connectClusterMock = jest.spyOn(Redis.Cluster.prototype, 'connect');
+
       return createClient(false, 'redis://localhost:6379,redis://localhost:6379')
         .then(resp => {
+          expect(connectClusterMock).toHaveBeenCalled();
           expect(resp).toHaveProperty('server', 'redis://localhost:6379,redis://localhost:6379');
         });
     });
 
     test('creates a Redis cluster client with a list of host:port', () => {
+      const connectClusterMock = jest.spyOn(Redis.Cluster.prototype, 'connect');
+
       return createClient(false, 'localhost:6379,localhost:6379')
         .then(resp => {
+          expect(connectClusterMock).toHaveBeenCalled();
           expect(resp).toHaveProperty('server', 'localhost:6379,localhost:6379');
         });
     });
 
     test('creates a Redis cluster client with a list of host', () => {
+      const connectClusterMock = jest.spyOn(Redis.Cluster.prototype, 'connect');
+
       return createClient(false, 'localhost,localhost')
         .then(resp => {
+          expect(connectClusterMock).toHaveBeenCalled();
           expect(resp).toHaveProperty('server', 'localhost,localhost');
         });
     });
